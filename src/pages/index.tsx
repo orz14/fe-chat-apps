@@ -7,7 +7,7 @@ import useAuth from "@/configs/api/auth";
 import { decryptData } from "@/lib/crypto";
 
 const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => <MainLoader /> });
-const Chats = dynamic(() => import("@/components/app/Chats"), { loading: () => <MainLoader /> });
+const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
 
 export default function IndexPage() {
   const [page, setPage] = useState<{ target: string; component: JSX.Element }>({
@@ -33,7 +33,7 @@ export default function IndexPage() {
     try {
       const resUser = await currentUser(decryptedData?.token);
       if (resUser?.status === 200) {
-        navigate("chats");
+        navigate("main");
       }
     } catch (err) {
       console.log(err);
@@ -62,10 +62,10 @@ export default function IndexPage() {
             component: <Login />,
           });
           break;
-        case "chats":
+        case "main":
           setPage({
-            target: "chats",
-            component: <Chats />,
+            target: "main",
+            component: <Main />,
           });
           break;
         default:
