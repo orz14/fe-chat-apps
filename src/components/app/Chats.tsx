@@ -1,17 +1,47 @@
-import { JSX, useState } from "react";
-import PersonalChats from "./chats/Personal";
+import { JSX, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import SpinnerLoader from "../loaders/SpinnerLoader";
 
-const GroupChats = dynamic(() => import("@/components/app/chats/Group"));
+const PersonalChats = dynamic(() => import("@/components/app/chats/Personal"), {
+  loading: () => (
+    <div className="w-full flex justify-center items-center p-4">
+      <SpinnerLoader width="w-[25px]" />
+    </div>
+  ),
+});
+const GroupChats = dynamic(() => import("@/components/app/chats/Group"), {
+  loading: () => (
+    <div className="w-full flex justify-center items-center p-4">
+      <SpinnerLoader width="w-[25px]" />
+    </div>
+  ),
+});
 
 export default function Chats() {
   const [chats, setChats] = useState<{ target: string; component: JSX.Element }>({
-    target: "personal",
-    component: <PersonalChats />,
+    target: "loader",
+    component: (
+      <div className="w-full flex justify-center items-center p-4">
+        <SpinnerLoader width="w-[25px]" />
+      </div>
+    ),
   });
+
+  useEffect(() => {
+    navigate("personal");
+  }, []);
 
   const navigate = (target: string) => {
     if (target === chats.target) return;
+
+    setChats({
+      target: "loader",
+      component: (
+        <div className="w-full flex justify-center items-center p-4">
+          <SpinnerLoader width="w-[25px]" />
+        </div>
+      ),
+    });
 
     switch (target) {
       case "personal":

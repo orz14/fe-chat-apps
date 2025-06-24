@@ -1,7 +1,7 @@
 import { comfortaa } from "@/lib/fonts";
 import { JSX, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import MainLoader from "@/components/MainLoader";
+import MainLoader from "@/components/loaders/MainLoader";
 import NotFound from "@/components/NotFound";
 import useAuth from "@/configs/api/auth";
 import { decryptData } from "@/lib/crypto";
