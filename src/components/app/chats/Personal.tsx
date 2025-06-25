@@ -4,9 +4,16 @@ import EachUtils from "@/utils/EachUtils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-export default function PersonalChats() {
+type RoomsType = {
+  room_type: string;
+  room_id: string;
+  room_name: string;
+  room_picture: string;
+};
+
+export default function PersonalChats({ chatRoom, setChatRoom }: { chatRoom: any; setChatRoom: (room: any) => void }) {
   const { personal } = useRoom();
-  const [rooms, setRooms] = useState<Array<any>>([]);
+  const [rooms, setRooms] = useState<Array<RoomsType>>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
   async function handleFetch() {
@@ -34,7 +41,18 @@ export default function PersonalChats() {
         <button
           key={room.room_id}
           type="button"
-          className="appearance-none w-full flex flex-row items-center justify-between p-4 font-bold text-[13px] text-indigo-900 transition-all duration-300 ease-in-out bg-indigo-100 rounded-xl gap-x-2 hover:bg-indigo-300 overflow-hidden"
+          className={`appearance-none w-full flex flex-row items-center justify-between p-4 font-bold text-[13px] text-indigo-900 transition-all duration-300 ease-in-out rounded-xl gap-x-2 hover:bg-indigo-300 overflow-hidden ${
+            chatRoom?.roomId === room.room_id ? "bg-indigo-300" : "bg-indigo-100"
+          }`}
+          onClick={() =>
+            setChatRoom({
+              targetElement: "chat-room",
+              roomType: room.room_type,
+              roomId: room.room_id,
+              roomName: room.room_name,
+              roomPicture: room.room_picture,
+            })
+          }
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
             {room?.room_picture?.length > 0 ? (
@@ -42,10 +60,10 @@ export default function PersonalChats() {
             ) : (
               <Image src={`https://ui-avatars.com/api/?name=${room.room_name.replaceAll(" ", "+")}`} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8" />
             )}
-            <span className="truncate">{room.room_name}</span>
+            <span className="max-w-[200px] truncate">{room.room_name}</span>
           </div>
-          {/* <div>
-            <span className="p-1 text-xs text-white bg-rose-500 rounded-full">0</span>
+          {/* <div className="flex min-h-4 min-w-4 max-w-[51px] items-center justify-center rounded-full bg-rose-500 text-white px-2 py-1 text-[11px] leading-none truncate">
+            <span>666</span>
           </div> */}
         </button>
       )}

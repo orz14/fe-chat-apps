@@ -2,14 +2,10 @@ import { JSX, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import SpinnerLoader from "../loaders/SpinnerLoader";
 
-const PersonalChats = dynamic(() => import("@/components/app/chats/Personal"), {
-  loading: () => (
-    <div className="w-full flex justify-center items-center p-4">
-      <SpinnerLoader width="w-[25px]" />
-    </div>
-  ),
-});
-const GroupChats = dynamic(() => import("@/components/app/chats/Group"), {
+const PersonalChats = dynamic<{
+  chatRoom: any;
+  setChatRoom: (room: any) => void;
+}>(() => import("@/components/app/chats/Personal"), {
   loading: () => (
     <div className="w-full flex justify-center items-center p-4">
       <SpinnerLoader width="w-[25px]" />
@@ -17,7 +13,18 @@ const GroupChats = dynamic(() => import("@/components/app/chats/Group"), {
   ),
 });
 
-export default function Chats() {
+const GroupChats = dynamic<{
+  chatRoom: any;
+  setChatRoom: (room: any) => void;
+}>(() => import("@/components/app/chats/Group"), {
+  loading: () => (
+    <div className="w-full flex justify-center items-center p-4">
+      <SpinnerLoader width="w-[25px]" />
+    </div>
+  ),
+});
+
+export default function Chats({ room, setRoom }: { room: any; setRoom: (room: any) => void }) {
   const [chats, setChats] = useState<{ target: string; component: JSX.Element }>({
     target: "loader",
     component: (
@@ -47,13 +54,13 @@ export default function Chats() {
       case "personal":
         setChats({
           target: "personal",
-          component: <PersonalChats />,
+          component: <PersonalChats chatRoom={room} setChatRoom={setRoom} />,
         });
         break;
       case "group":
         setChats({
           target: "group",
-          component: <GroupChats />,
+          component: <GroupChats chatRoom={room} setChatRoom={setRoom} />,
         });
         break;
     }

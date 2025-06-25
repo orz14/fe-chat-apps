@@ -1,24 +1,39 @@
-import Image from "next/image";
 import Chats from "./Chats";
 import { JSX, useState } from "react";
 import dynamic from "next/dynamic";
+import Index from "./room/Index";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
 export default function Main() {
+  const [room, setRoom] = useState<any>({
+    targetElement: "chat-box",
+    roomType: null,
+    roomId: null,
+    roomName: null,
+    roomPicture: null,
+  });
   const [sidebar, setSidebar] = useState<{ target: string; component: JSX.Element }>({
     target: "chats",
-    component: <Chats />,
+    component: <Chats room={room} setRoom={setRoom} />,
   });
 
   const navigate = (target: string) => {
     if (target === sidebar.target) return;
 
+    setRoom({
+      targetElement: "chat-box",
+      roomType: null,
+      roomId: null,
+      roomName: null,
+      roomPicture: null,
+    });
+
     switch (target) {
       case "chats":
         setSidebar({
           target: "chats",
-          component: <Chats />,
+          component: <Chats room={room} setRoom={setRoom} />,
         });
         break;
       case "profile":
@@ -59,9 +74,7 @@ export default function Main() {
       <aside className="h-full w-[360px] overflow-y-auto bg-indigo-200 p-4 text-sm space-y-2 shrink-0">{sidebar.component}</aside>
 
       {/* Content */}
-      <div className="flex items-center justify-center w-full h-full">
-        <Image src="https://cdn.jsdelivr.net/gh/orz14/orzcode@main/img/chat-apps-logo.webp" alt={process.env.NEXT_PUBLIC_APP_NAME || "Chat Apps"} width={408} height={174} className="w-full max-w-[400px] h-auto" priority={true} />
-      </div>
+      <Index room={room} />
     </section>
   );
 }
