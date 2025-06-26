@@ -1,5 +1,6 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import useRoom from "@/configs/api/room";
+import { useRoomStore } from "@/stores/useRoomStore";
 import EachUtils from "@/utils/EachUtils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -11,8 +12,9 @@ type RoomsType = {
   room_picture: string;
 };
 
-export default function GroupChats({ chatRoom, setChatRoom }: { chatRoom: any; setChatRoom: (room: any) => void }) {
+export default function GroupChats() {
   const { group } = useRoom();
+  const roomState = useRoomStore();
   const [rooms, setRooms] = useState<RoomsType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -42,10 +44,10 @@ export default function GroupChats({ chatRoom, setChatRoom }: { chatRoom: any; s
           key={room.room_id}
           type="button"
           className={`appearance-none w-full flex flex-row items-center justify-between p-4 font-bold text-[13px] text-indigo-900 transition-all duration-300 ease-in-out rounded-xl gap-x-2 hover:bg-indigo-300 overflow-hidden ${
-            chatRoom?.roomId === room.room_id ? "bg-indigo-300" : "bg-indigo-100"
+            roomState?.room?.roomId === room.room_id ? "bg-indigo-300" : "bg-indigo-100"
           }`}
           onClick={() =>
-            setChatRoom({
+            roomState.setRoom({
               targetElement: "chat-room",
               roomType: room.room_type,
               roomId: room.room_id,

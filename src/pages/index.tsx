@@ -1,21 +1,22 @@
 import { comfortaa } from "@/lib/fonts";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import MainLoader from "@/components/loaders/MainLoader";
 import NotFound from "@/components/NotFound";
 import useAuth from "@/configs/api/auth";
 import { decryptData } from "@/lib/crypto";
+import { usePageStore } from "@/stores/usePageStore";
 
 const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => <MainLoader /> });
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
 
 export default function IndexPage() {
-  const [page, setPage] = useState<string>("main-loader");
+  const state = usePageStore();
   const timeOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { currentUser } = useAuth();
 
   const renderPage = () => {
-    switch (page) {
+    switch (state.page) {
       case "login":
         return <Login />;
       case "main":
@@ -54,23 +55,22 @@ export default function IndexPage() {
   }
 
   const navigate = (target: string) => {
-    if (target === page) return;
+    if (target === state.page) return;
     if (timeOutRef.current) {
       clearTimeout(timeOutRef.current);
     }
-
-    setPage("main-loader");
+    state.setPage("main-loader");
 
     timeOutRef.current = setTimeout(() => {
       switch (target) {
         case "login":
-          setPage("login");
+          state.setPage("login");
           break;
         case "main":
-          setPage("main");
+          state.setPage("main");
           break;
         default:
-          setPage("not-found");
+          state.setPage("not-found");
           break;
       }
       timeOutRef.current = null;

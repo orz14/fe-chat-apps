@@ -1,12 +1,9 @@
-import { JSX, useEffect, useState } from "react";
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import SpinnerLoader from "../loaders/SpinnerLoader";
+import { useChatsStore } from "@/stores/useChatsStore";
 
-const PersonalChats = dynamic<{
-  chatRoom: any;
-  setChatRoom: (room: any) => void;
-}>(() => import("@/components/app/chats/Personal"), {
-  ssr: false,
+const PersonalChats = dynamic(() => import("@/components/app/chats/Personal"), {
   loading: () => (
     <div className="w-full flex justify-center items-center p-4">
       <SpinnerLoader width="w-[25px]" />
@@ -14,10 +11,7 @@ const PersonalChats = dynamic<{
   ),
 });
 
-const GroupChats = dynamic<{
-  chatRoom: any;
-  setChatRoom: (room: any) => void;
-}>(() => import("@/components/app/chats/Group"), {
+const GroupChats = dynamic(() => import("@/components/app/chats/Group"), {
   loading: () => (
     <div className="w-full flex justify-center items-center p-4">
       <SpinnerLoader width="w-[25px]" />
@@ -25,22 +19,15 @@ const GroupChats = dynamic<{
   ),
 });
 
-export default function Chats({ room, setRoom }: { room: any; setRoom: (room: any) => void }) {
-  const [chats, setChats] = useState<{ target: string; component: JSX.Element | null }>({
-    target: "personal",
-    component: (
-      <div className="w-full flex justify-center items-center p-4">
-        <SpinnerLoader width="w-[25px]" />
-      </div>
-    ),
-  });
+export default function Chats() {
+  const chatsState = useChatsStore();
 
   const renderChats = () => {
-    switch (chats.target) {
+    switch (chatsState.chats.target) {
       case "personal":
-        return <PersonalChats chatRoom={room} setChatRoom={setRoom} />;
+        return <PersonalChats />;
       case "group":
-        return <GroupChats chatRoom={room} setChatRoom={setRoom} />;
+        return <GroupChats />;
     }
   };
 
@@ -49,9 +36,9 @@ export default function Chats({ room, setRoom }: { room: any; setRoom: (room: an
   }, []);
 
   const navigate = (target: string) => {
-    if (target === chats.target) return;
+    if (target === chatsState.chats.target) return;
 
-    setChats({
+    chatsState.setChats({
       target: "loader",
       component: (
         <div className="w-full flex justify-center items-center p-4">
@@ -62,13 +49,13 @@ export default function Chats({ room, setRoom }: { room: any; setRoom: (room: an
 
     switch (target) {
       case "personal":
-        setChats({
+        chatsState.setChats({
           target: "personal",
           component: null,
         });
         break;
       case "group":
-        setChats({
+        chatsState.setChats({
           target: "group",
           component: null,
         });
@@ -95,14 +82,18 @@ export default function Chats({ room, setRoom }: { room: any; setRoom: (room: an
       <div className="flex flex-row items-center pb-1 text-xs gap-x-2">
         <button
           type="button"
-          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${chats.target === "personal" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"}`}
+          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${
+            chatsState.chats.target === "personal" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"
+          }`}
           onClick={() => navigate("personal")}
         >
           Personal
         </button>
         <button
           type="button"
-          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${chats.target === "group" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"}`}
+          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${
+            chatsState.chats.target === "group" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"
+          }`}
           onClick={() => navigate("group")}
         >
           Group

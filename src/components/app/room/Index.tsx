@@ -1,10 +1,12 @@
-import { JSX, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ChatBox from "./ChatBox";
 import dynamic from "next/dynamic";
+import { useRoomStore } from "@/stores/useRoomStore";
 
-const ChatRoom = dynamic<{ room: any }>(() => import("@/components/app/room/ChatRoom"));
+const ChatRoom = dynamic(() => import("@/components/app/room/ChatRoom"));
 
-export default function Index({ room }: { room: any }) {
+export default function Index() {
+  const { room } = useRoomStore();
   const [element, setElement] = useState<{ target: string; roomId: string | null }>({
     target: "chat-box",
     roomId: null,
@@ -15,7 +17,7 @@ export default function Index({ room }: { room: any }) {
       case "chat-box":
         return <ChatBox />;
       case "chat-room":
-        return <ChatRoom room={room} />;
+        return <ChatRoom />;
     }
   };
 
