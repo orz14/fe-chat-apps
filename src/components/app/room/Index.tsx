@@ -5,11 +5,19 @@ import dynamic from "next/dynamic";
 const ChatRoom = dynamic<{ room: any }>(() => import("@/components/app/room/ChatRoom"));
 
 export default function Index({ room }: { room: any }) {
-  const [element, setElement] = useState<{ target: string; roomId: string | null; component: JSX.Element }>({
+  const [element, setElement] = useState<{ target: string; roomId: string | null }>({
     target: "chat-box",
     roomId: null,
-    component: <ChatBox />,
   });
+
+  const renderRoom = () => {
+    switch (element.target) {
+      case "chat-box":
+        return <ChatBox />;
+      case "chat-room":
+        return <ChatRoom room={room} />;
+    }
+  };
 
   useEffect(() => {
     if (room?.targetElement === "chat-box") {
@@ -27,18 +35,16 @@ export default function Index({ room }: { room: any }) {
         setElement({
           target: "chat-box",
           roomId: null,
-          component: <ChatBox />,
         });
         break;
       case "chat-room":
         setElement({
           target: "chat-room",
           roomId: room?.roomId,
-          component: <ChatRoom room={room} />,
         });
         break;
     }
   };
 
-  return element.component;
+  return renderRoom();
 }

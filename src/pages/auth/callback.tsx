@@ -72,7 +72,7 @@ export default function AuthorizationCallbackPage() {
         <div className="w-full h-full overflow-hidden lg:rounded-2xl bg-red-500">
           <section className="h-full flex justify-center items-center overflow-hidden bg-indigo-100">
             <Loader2 className="animate-spin w-4 h-4 mr-2 -mt-1" />
-            <span>Authorization</span>
+            <span className="font-bold">Authorization</span>
           </section>
         </div>
       </main>

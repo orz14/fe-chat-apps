@@ -13,8 +13,8 @@ type RoomsType = {
 
 export default function GroupChats({ chatRoom, setChatRoom }: { chatRoom: any; setChatRoom: (room: any) => void }) {
   const { group } = useRoom();
-  const [rooms, setRooms] = useState<Array<RoomsType>>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [rooms, setRooms] = useState<RoomsType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   async function handleFetch() {
     setLoading(true);
@@ -55,7 +55,7 @@ export default function GroupChats({ chatRoom, setChatRoom }: { chatRoom: any; s
           }
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
-            {room?.room_picture?.length > 0 ? (
+            {room.room_picture?.length > 0 ? (
               <Image src={room.room_picture} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8" />
             ) : (
               <div className="size-8 flex justify-center items-center bg-[#ddd] rounded-full">

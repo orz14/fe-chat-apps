@@ -22,8 +22,8 @@ export default function EachUtils({ of, render, isLoading, Loader, Empty }: Each
     return Empty != null ? (
       <Empty />
     ) : (
-      <div>
-        <p className="text-center text-gray-500">No Data</p>
+      <div className="w-full text-center p-4">
+        <span>No data</span>
       </div>
     );
   }

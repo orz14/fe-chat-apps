@@ -1,5 +1,5 @@
 import Chats from "./Chats";
-import { JSX, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import Index from "./room/Index";
 
@@ -13,13 +13,20 @@ export default function Main() {
     roomName: null,
     roomPicture: null,
   });
-  const [sidebar, setSidebar] = useState<{ target: string; component: JSX.Element }>({
-    target: "chats",
-    component: <Chats room={room} setRoom={setRoom} />,
-  });
+
+  const [sidebar, setSidebar] = useState<string>("chats");
+
+  const renderSidebar = () => {
+    switch (sidebar) {
+      case "chats":
+        return <Chats room={room} setRoom={setRoom} />;
+      case "profile":
+        return <Profile />;
+    }
+  };
 
   const navigate = (target: string) => {
-    if (target === sidebar.target) return;
+    if (target === sidebar) return;
 
     setRoom({
       targetElement: "chat-box",
@@ -31,16 +38,10 @@ export default function Main() {
 
     switch (target) {
       case "chats":
-        setSidebar({
-          target: "chats",
-          component: <Chats room={room} setRoom={setRoom} />,
-        });
+        setSidebar("chats");
         break;
       case "profile":
-        setSidebar({
-          target: "profile",
-          component: <Profile />,
-        });
+        setSidebar("profile");
         break;
     }
   };
@@ -49,7 +50,7 @@ export default function Main() {
     <section className="flex flex-row h-full overflow-hidden bg-indigo-100">
       {/* Menu */}
       <nav className="flex flex-col items-center justify-between h-full p-4 text-indigo-700 gap-y-4 shrink-0">
-        <button type="button" className={`p-2 rounded-full appearance-none ${sidebar.target === "chats" && "bg-indigo-200"}`} title="Chats" onClick={() => navigate("chats")}>
+        <button type="button" className={`p-2 rounded-full appearance-none ${sidebar === "chats" && "bg-indigo-200"}`} title="Chats" onClick={() => navigate("chats")}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
             <path
               fillRule="evenodd"
@@ -59,7 +60,7 @@ export default function Main() {
           </svg>
         </button>
 
-        <button type="button" className={`p-2 rounded-full appearance-none ${sidebar.target === "profile" && "bg-indigo-200"}`} title="Profile" onClick={() => navigate("profile")}>
+        <button type="button" className={`p-2 rounded-full appearance-none ${sidebar === "profile" && "bg-indigo-200"}`} title="Profile" onClick={() => navigate("profile")}>
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
             <path
               fillRule="evenodd"
@@ -71,7 +72,7 @@ export default function Main() {
       </nav>
 
       {/* Sidebar */}
-      <aside className="h-full w-[360px] overflow-y-auto bg-indigo-200 p-4 text-sm space-y-2 shrink-0">{sidebar.component}</aside>
+      <aside className="h-full w-[360px] overflow-y-auto bg-indigo-200 p-4 text-sm space-y-2 shrink-0">{renderSidebar()}</aside>
 
       {/* Content */}
       <Index room={room} />

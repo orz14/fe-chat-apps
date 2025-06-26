@@ -1,6 +1,4 @@
 export default function ChatRoom({ room }: { room: any }) {
-  console.log(room);
-
   return (
     <>
       <div className="flex flex-col">

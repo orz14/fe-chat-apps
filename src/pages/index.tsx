@@ -1,5 +1,5 @@
 import { comfortaa } from "@/lib/fonts";
-import { JSX, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import MainLoader from "@/components/loaders/MainLoader";
 import NotFound from "@/components/NotFound";
@@ -10,12 +10,22 @@ const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => 
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
 
 export default function IndexPage() {
-  const [page, setPage] = useState<{ target: string; component: JSX.Element }>({
-    target: "main-loader",
-    component: <MainLoader />,
-  });
+  const [page, setPage] = useState<string>("main-loader");
   const timeOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { currentUser } = useAuth();
+
+  const renderPage = () => {
+    switch (page) {
+      case "login":
+        return <Login />;
+      case "main":
+        return <Main />;
+      case "main-loader":
+        return <MainLoader />;
+      case "not-found":
+        return <NotFound />;
+    }
+  };
 
   useEffect(() => {
     const credentials = localStorage.getItem("credentials");
@@ -44,35 +54,23 @@ export default function IndexPage() {
   }
 
   const navigate = (target: string) => {
-    if (target === page.target) return;
+    if (target === page) return;
     if (timeOutRef.current) {
       clearTimeout(timeOutRef.current);
     }
 
-    setPage({
-      target: "main-loader",
-      component: <MainLoader />,
-    });
+    setPage("main-loader");
 
     timeOutRef.current = setTimeout(() => {
       switch (target) {
         case "login":
-          setPage({
-            target: "login",
-            component: <Login />,
-          });
+          setPage("login");
           break;
         case "main":
-          setPage({
-            target: "main",
-            component: <Main />,
-          });
+          setPage("main");
           break;
         default:
-          setPage({
-            target: "not-found",
-            component: <NotFound />,
-          });
+          setPage("not-found");
           break;
       }
       timeOutRef.current = null;
@@ -88,10 +86,8 @@ export default function IndexPage() {
   }, []);
 
   return (
-    <>
-      <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
-        <div className="w-full h-full overflow-hidden lg:rounded-2xl">{page.component}</div>
-      </main>
-    </>
+    <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
+      <div className="w-full h-full overflow-hidden lg:rounded-2xl">{renderPage()}</div>
+    </main>
   );
 }
