@@ -12,8 +12,11 @@ function useChat() {
     }
   };
 
+  const sendText = (id: string, room_id: string, type: string, content: string) => axiosFetch("post", `${baseURL}/send/text`, { id, room_id, type, content });
+
   return {
     loadChats,
+    sendText,
   };
 }
 

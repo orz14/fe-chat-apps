@@ -1,21 +1,25 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import useChat from "@/configs/api/chat";
+import echo from "@/lib/echo";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useUserDataStore } from "@/stores/useUserDataStore";
 import EachUtils from "@/utils/EachUtils";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Image from "next/image";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { monotonicFactory } from "ulid";
 
 export default function ChatRoom() {
   const { room } = useRoomStore();
   const { user } = useUserDataStore();
-  const { loadChats } = useChat();
+  const { loadChats, sendText } = useChat();
   const ulid = monotonicFactory();
+  const router = useRouter();
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [message, setMessage] = useState<string>("");
 
   // console.log(ulid(Date.now()));
 
@@ -23,9 +27,9 @@ export default function ChatRoom() {
     setLoading(true);
     setMessages([]);
     try {
-      const res = await loadChats(room.roomId!, lastSentAt, lastMessageId);
-      if (res?.status === 200) {
-        setMessages(res.data.chats);
+      const resChats = await loadChats(room.roomId!, lastSentAt, lastMessageId);
+      if (resChats?.status === 200) {
+        setMessages(resChats.data.chats);
       }
     } catch (err) {
       console.log(err);
@@ -37,6 +41,36 @@ export default function ChatRoom() {
   useEffect(() => {
     if (room?.roomId) {
       handleLoadChats(null, null);
+
+      const roomName = `room.${room.roomId}`;
+      const channel = echo?.private(roomName);
+
+      channel
+        ?.listen(".message.sent", (e: any) => {
+          if (e.content.sender_id === user.id) return;
+          addMessageToChatRoom({
+            content: {
+              id: e.content.id,
+              room_id: room.roomId!,
+              sender_id: e.content.sender_id,
+              type: "text",
+              content: e.content.content,
+              sent_at: e.content.sent_at,
+            },
+          });
+          // $("#newMessage").show();
+        })
+        .error((err: any) => {
+          if (err.status === 403) {
+            localStorage.removeItem("credentials");
+            router.reload();
+          }
+        });
+
+      return () => {
+        channel?.stopListening(".message.sent");
+        echo?.leave(roomName);
+      };
     }
   }, [room?.roomId]);
 
@@ -54,9 +88,49 @@ export default function ChatRoom() {
       sent_at: string | number | Date;
     };
   }) {
-    setMessages([...messages, event.content]);
+    setMessages((prevMessages) => [...prevMessages, event.content]);
 
-    // kondisi untuk scroll ke bawah
+    // handle scroll
+    if (event.content.sender_id === user.id) {
+      //
+    } else {
+      //
+    }
+  }
+
+  async function handleSendText(e: React.FormEvent) {
+    e.preventDefault();
+
+    const event = {
+      content: {
+        id: ulid(Date.now()),
+        sender_id: user.id!,
+        content: message,
+        sent_at: Date.now(),
+        type: "text",
+      },
+    };
+
+    addMessageToChatRoom({
+      content: {
+        id: event.content.id,
+        room_id: room.roomId!,
+        sender_id: event.content.sender_id,
+        type: event.content.type,
+        content: event.content.content,
+        sent_at: event.content.sent_at,
+      },
+    });
+
+    try {
+      const resSendText = await sendText(event.content.id, room.roomId!, event.content.type, event.content.content);
+      if (resSendText?.status === 200) {
+        // alert("berhasil dikirim");
+      }
+    } catch (err: any) {
+      alert(err.message);
+      // jika error hapus lagi message yg baru saja dikirim
+    }
   }
 
   return (
@@ -133,7 +207,7 @@ export default function ChatRoom() {
           </button>
         </div>
 
-        <form id="messageForm" className="relative flex flex-row items-center justify-between w-full p-4 bg-indigo-400 gap-x-4" autoComplete="off">
+        <form id="messageForm" onSubmit={handleSendText} className="relative flex flex-row items-center justify-between w-full p-4 bg-indigo-400 gap-x-4" autoComplete="off">
           <div id="backToBottom" className="absolute transition-all duration-300 ease-in-out scale-0 right-5 -top-9">
             <div className="relative">
               <div id="newMessage" className="absolute top-[-1px] left-[-1px] rounded-full bg-rose-500 size-2 hidden"></div>
@@ -165,6 +239,8 @@ export default function ChatRoom() {
             id="message"
             placeholder="Type a message"
             className="w-full px-4 py-2.5 text-sm text-indigo-900 font-semibold placeholder-gray-400 bg-white rounded-md appearance-none placeholder:text-xs focus:outline-none focus:border-transparent transition-colors duration-300 ease-in-out"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
             autoFocus
           />
 
