@@ -3,12 +3,33 @@ import dynamic from "next/dynamic";
 import Index from "./room/Index";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
+import { useUserDataStore } from "@/stores/useUserDataStore";
+import { useEffect } from "react";
+import { decryptData } from "@/lib/crypto";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
 export default function Main() {
   const roomState = useRoomStore();
   const sidebarState = useSidebarStore();
+  const userState = useUserDataStore();
+
+  useEffect(() => {
+    const credentials = localStorage.getItem("credentials") ?? null;
+    if (credentials) {
+      const decryptedData = decryptData(credentials);
+      if (decryptedData) {
+        userState.setUser({
+          id: decryptedData.user.id,
+          name: decryptedData.user.name,
+          username: decryptedData.user.username,
+          email: decryptedData.user.email,
+          avatar: decryptedData.user.avatar,
+          token: decryptedData.token,
+        });
+      }
+    }
+  }, []);
 
   const renderSidebar = () => {
     switch (sidebarState.sidebar) {

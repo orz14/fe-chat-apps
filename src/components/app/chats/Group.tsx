@@ -1,21 +1,15 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import useRoom from "@/configs/api/room";
+import { useGroupRoomsStore } from "@/stores/useGroupRoomsStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import EachUtils from "@/utils/EachUtils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type RoomsType = {
-  room_type: string;
-  room_id: string;
-  room_name: string;
-  room_picture: string;
-};
-
 export default function GroupChats() {
   const { group } = useRoom();
   const roomState = useRoomStore();
-  const [rooms, setRooms] = useState<RoomsType[]>([]);
+  const roomsState = useGroupRoomsStore();
   const [loading, setLoading] = useState<boolean>(true);
 
   async function handleFetch() {
@@ -23,7 +17,7 @@ export default function GroupChats() {
     try {
       const res = await group();
       if (res?.status === 200) {
-        setRooms(res.data.rooms);
+        roomsState.setRooms(res.data.rooms);
       }
     } catch (err) {
       console.log(err);
@@ -38,7 +32,7 @@ export default function GroupChats() {
 
   return (
     <EachUtils
-      of={rooms}
+      of={roomsState.rooms}
       render={(room: any) => (
         <button
           key={room.room_id}

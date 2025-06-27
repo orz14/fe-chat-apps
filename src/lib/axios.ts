@@ -54,7 +54,9 @@ if (typeof window !== "undefined") {
       const encryptedData = localStorage.getItem("credentials") ?? null;
       if (encryptedData) {
         const decryptedData = decryptData(encryptedData);
-        config.headers["Authorization"] = `Bearer ${decryptedData.token}`;
+        if (decryptedData) {
+          config.headers["Authorization"] = `Bearer ${decryptedData.token}`;
+        }
       }
 
       return config;
