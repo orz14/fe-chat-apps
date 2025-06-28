@@ -48,16 +48,7 @@ export default function ChatRoom() {
       channel
         ?.listen(".message.sent", (e: any) => {
           if (e.content.sender_id === user.id) return;
-          addMessageToChatRoom({
-            content: {
-              id: e.content.id,
-              room_id: room.roomId!,
-              sender_id: e.content.sender_id,
-              type: "text",
-              content: e.content.content,
-              sent_at: e.content.sent_at,
-            },
-          });
+          addMessageToChatRoom(e.content);
           // $("#newMessage").show();
         })
         .error((err: any) => {
@@ -78,20 +69,11 @@ export default function ChatRoom() {
     return format(new Date(time), "dd MMM yyyy HH:mm", { locale: id });
   }
 
-  function addMessageToChatRoom(event: {
-    content: {
-      id: string;
-      room_id: string;
-      sender_id: number;
-      type: string;
-      content: string;
-      sent_at: string | number | Date;
-    };
-  }) {
-    setMessages((prevMessages) => [...prevMessages, event.content]);
+  function addMessageToChatRoom(event: { id: string; room_id: string; sender_id: number; type: string; content: string; sent_at: string | number | Date }) {
+    setMessages((prevMessages) => [...prevMessages, event]);
 
     // handle scroll
-    if (event.content.sender_id === user.id) {
+    if (event.sender_id === user.id) {
       //
     } else {
       //
@@ -102,35 +84,30 @@ export default function ChatRoom() {
     e.preventDefault();
 
     const event = {
-      content: {
-        id: ulid(Date.now()),
-        sender_id: user.id!,
-        content: message,
-        sent_at: Date.now(),
-        type: "text",
-      },
+      id: ulid(Date.now()),
+      room_id: room.roomId!,
+      sender_id: user.id!,
+      type: "text",
+      content: message,
+      sent_at: Date.now(),
     };
 
-    addMessageToChatRoom({
-      content: {
-        id: event.content.id,
-        room_id: room.roomId!,
-        sender_id: event.content.sender_id,
-        type: event.content.type,
-        content: event.content.content,
-        sent_at: event.content.sent_at,
-      },
-    });
+    addMessageToChatRoom(event);
 
     try {
-      const resSendText = await sendText(event.content.id, room.roomId!, event.content.type, event.content.content);
+      const resSendText = await sendText(event.id, event.room_id, event.type, event.content);
       if (resSendText?.status === 200) {
         // alert("berhasil dikirim");
       }
     } catch (err: any) {
       alert(err.message);
       // jika error hapus lagi message yg baru saja dikirim
+      handleDeleteMessage(event.id);
     }
+  }
+
+  function handleDeleteMessage(id: string) {
+    setMessages((prevMessages) => prevMessages.filter((message) => message.id !== id));
   }
 
   return (
@@ -188,23 +165,6 @@ export default function ChatRoom() {
               </div>
             )}
           />
-          <button
-            type="button"
-            onClick={() =>
-              addMessageToChatRoom({
-                content: {
-                  id: ulid(Date.now()),
-                  room_id: room.roomId!,
-                  sender_id: user.id!,
-                  type: "text",
-                  content: "testing",
-                  sent_at: Date.now(),
-                },
-              })
-            }
-          >
-            test
-          </button>
         </div>
 
         <form id="messageForm" onSubmit={handleSendText} className="relative flex flex-row items-center justify-between w-full p-4 bg-indigo-400 gap-x-4" autoComplete="off">
