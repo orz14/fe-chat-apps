@@ -4,7 +4,7 @@ export default function Document() {
   return (
     <Html lang="en" prefix="og: https://ogp.me/ns#">
       <Head />
-      <body className="text-sm antialiased bg-white">
+      <body className="text-sm antialiased bg-white text-black">
         <Main />
         <NextScript />
       </body>
