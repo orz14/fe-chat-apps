@@ -1,3 +1,11 @@
+import MetaTag from "./MetaTag";
+
 export default function NotFound() {
-  return <div>Not Found</div>;
+  return (
+    <>
+      <MetaTag title="Not Found" />
+
+      <div>Not Found</div>
+    </>
+  );
 }

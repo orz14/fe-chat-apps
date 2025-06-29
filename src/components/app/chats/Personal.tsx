@@ -52,9 +52,9 @@ export default function PersonalChats() {
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
             {room.room_picture?.length > 0 ? (
-              <Image src={room.room_picture} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8" />
+              <Image src={room.room_picture} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8 pointer-events-none" />
             ) : (
-              <Image src={`https://ui-avatars.com/api/?name=${room.room_name.replaceAll(" ", "+")}`} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8" />
+              <Image src={`https://ui-avatars.com/api/?name=${room.room_name.replaceAll(" ", "+")}`} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8 pointer-events-none" />
             )}
             <span className="max-w-[200px] truncate">{room.room_name}</span>
           </div>

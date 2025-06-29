@@ -1,3 +1,4 @@
+import MetaTag from "@/components/MetaTag";
 import useAuth from "@/configs/api/auth";
 import { encryptData } from "@/lib/crypto";
 import { comfortaa } from "@/lib/fonts";
@@ -67,7 +68,8 @@ export default function AuthorizationCallbackPage() {
 
   return (
     <>
-      {/* <MetaTag title={"Authorization"} /> */}
+      <MetaTag title={"Authorization"} />
+
       <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
         <div className="w-full h-full overflow-hidden lg:rounded-2xl bg-red-500">
           <section className="h-full flex justify-center items-center overflow-hidden bg-indigo-100">

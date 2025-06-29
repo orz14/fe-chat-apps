@@ -52,9 +52,9 @@ export default function GroupChats() {
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
             {room.room_picture?.length > 0 ? (
-              <Image src={room.room_picture} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8" />
+              <Image src={room.room_picture} alt={room.room_name} width={50} height={50} className="object-cover rounded-full size-8 pointer-events-none" />
             ) : (
-              <div className="size-8 flex justify-center items-center bg-[#ddd] rounded-full">
+              <div className="size-8 flex justify-center items-center bg-[#ddd] rounded-full pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
                   <path
                     fillRule="evenodd"

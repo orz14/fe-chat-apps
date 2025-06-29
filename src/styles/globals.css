@@ -67,6 +67,31 @@
   }
 }
 
+/* My Styles */
+::selection {
+  @apply bg-indigo-700/70 text-white;
+}
+
+::-webkit-scrollbar {
+  @apply size-2;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-indigo-400;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-indigo-500 cursor-grab;
+}
+
+::-webkit-scrollbar-thumb:active {
+  @apply cursor-grabbing;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-indigo-100;
+}
+
 .progress-loader {
   height: 4px;
   width: 130px;
