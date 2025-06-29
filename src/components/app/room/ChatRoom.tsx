@@ -66,7 +66,7 @@ export default function ChatRoom() {
 
       channel
         ?.listen(".message.sent", (e: any) => {
-          if (e.content.sender_id == user.id) return;
+          if (e.content.sender_id === user.id) return;
           addMessageToChatRoom(e.content);
           newMessageRef.current?.classList.remove("hidden");
         })
@@ -103,7 +103,7 @@ export default function ChatRoom() {
     setMessages((prevMessages) => [...prevMessages, event]);
 
     requestAnimationFrame(() => {
-      if (event.sender_id == user.id) {
+      if (event.sender_id === user.id) {
         scrollToBottom("smooth");
         return;
       } else {
@@ -228,9 +228,9 @@ export default function ChatRoom() {
             of={messages}
             render={(message: any) => {
               return message.type === "text" ? (
-                <div key={message.id} className={`w-full flex flex-col text-pretty chat ${message.sender_id == user.id ? "items-end" : "items-start"}`}>
-                  <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${message.sender_id == user.id ? "bg-indigo-500 text-white rounded-bl-xl" : "bg-white text-black rounded-br-xl"}`}>{message.content}</span>
-                  <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${message.sender_id == user.id ? "bg-indigo-500 text-gray-50" : "bg-white text-gray-400"}`}>{getFormattedTime(message.sent_at)}</span>
+                <div key={message.id} className={`w-full flex flex-col text-pretty chat ${message.sender_id === user.id ? "items-end" : "items-start"}`}>
+                  <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${message.sender_id === user.id ? "bg-indigo-500 text-white rounded-bl-xl" : "bg-white text-black rounded-br-xl"}`}>{message.content}</span>
+                  <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${message.sender_id === user.id ? "bg-indigo-500 text-gray-50" : "bg-white text-gray-400"}`}>{getFormattedTime(message.sent_at)}</span>
                 </div>
               ) : (
                 "coming soon"
