@@ -4,6 +4,7 @@ import echo from "@/lib/echo";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useUserDataStore } from "@/stores/useUserDataStore";
 import EachUtils from "@/utils/EachUtils";
+import { showNotification } from "@/utils/notifications";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Image from "next/image";
@@ -69,6 +70,22 @@ export default function ChatRoom() {
           if (e.content.sender_id === user.id) return;
           addMessageToChatRoom(e.content);
           newMessageRef.current?.classList.remove("hidden");
+
+          let content: object = {};
+          if (e.content.type === "text") {
+            content = {
+              body: e.content.content,
+            };
+          } else if (e.content.type === "image") {
+            content = {
+              image: e.content.content,
+            } as any;
+          } else if (e.content.type === "file") {
+            content = {
+              body: "Mengirim sebuah file.",
+            };
+          }
+          showNotification(`Pesan dari ${e.content.sender_name}`, content);
         })
         .error((err: any) => {
           if (err.status === 403) {
@@ -100,7 +117,17 @@ export default function ChatRoom() {
   function addMessageToChatRoom(event: { id: string; room_id: string; sender_id: number; type: string; content: string; sent_at: string | number | Date }) {
     const lastMessageHeightBefore = getLastMessageHeight() || 59;
 
-    setMessages((prevMessages) => [...prevMessages, event]);
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      {
+        id: event.id,
+        room_id: event.room_id,
+        sender_id: event.sender_id,
+        type: event.type,
+        content: event.content,
+        sent_at: event.sent_at,
+      },
+    ]);
 
     requestAnimationFrame(() => {
       if (event.sender_id === user.id) {

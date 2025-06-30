@@ -7,6 +7,7 @@ import { useUserDataStore } from "@/stores/useUserDataStore";
 import { useEffect } from "react";
 import { decryptData } from "@/lib/crypto";
 import MetaTag from "../MetaTag";
+import { requestNotificationPermission } from "@/utils/notifications";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
@@ -30,6 +31,8 @@ export default function Main() {
         });
       }
     }
+
+    requestNotificationPermission();
   }, []);
 
   const renderSidebar = () => {
