@@ -1,18 +1,23 @@
 import Image from "next/image";
 import { useState } from "react";
 import MetaTag from "../MetaTag";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
+  const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
 
   async function handleLoginSocialite(endpoint: string) {
     setLoading(true);
     try {
       window.location.href = endpoint;
-    } catch (err) {
+    } catch (err: any) {
       // await writeLogClient("error", err);
-      console.log(err);
       setLoading(false);
+      toast({
+        variant: "destructive",
+        description: err.message,
+      });
     }
   }
 

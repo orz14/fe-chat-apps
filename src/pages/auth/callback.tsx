@@ -1,5 +1,6 @@
 import MetaTag from "@/components/MetaTag";
 import useAuth from "@/configs/api/auth";
+import { useToast } from "@/hooks/use-toast";
 import { encryptData } from "@/lib/crypto";
 import { comfortaa } from "@/lib/fonts";
 import { Loader2 } from "lucide-react";
@@ -8,20 +9,17 @@ import { useEffect } from "react";
 
 export default function AuthorizationCallbackPage() {
   const router = useRouter();
-  // const { toast } = useToast();
+  const { toast } = useToast();
   const { currentUser } = useAuth();
-  // const { login } = useAppContext();
 
   async function handleCatch(err: any) {
     if (err.status !== 401) {
-      // toast({
-      //   variant: "destructive",
-      //   description: err.message,
-      // });
-
       // await writeLogClient("error", err);
-
       router.push("/");
+      toast({
+        variant: "destructive",
+        description: err.message,
+      });
     }
   }
 
@@ -53,12 +51,11 @@ export default function AuthorizationCallbackPage() {
     const { token, status } = router.query;
 
     if (status && status == "failed") {
-      // toast({
-      //   variant: "destructive",
-      //   description: "Login failed.",
-      // });
-
       router.push("/");
+      toast({
+        variant: "destructive",
+        description: "Login failed.",
+      });
     }
 
     if (token) {
