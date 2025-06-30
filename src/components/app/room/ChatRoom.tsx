@@ -63,6 +63,7 @@ export default function ChatRoom() {
       setLoadingRoom(true);
       setMessages([]);
       newMessageRef.current?.classList.add("hidden");
+      backToTopRef.current?.classList.remove("!scale-100");
       inputTextRef.current!.value = "";
 
       (async () => {
