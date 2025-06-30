@@ -63,6 +63,7 @@ export default function ChatRoom() {
       setLoadingRoom(true);
       setMessages([]);
       newMessageRef.current?.classList.add("hidden");
+      backToTopRef.current?.classList.remove("!scale-100");
       inputTextRef.current!.value = "";
 
       (async () => {
@@ -127,7 +128,7 @@ export default function ChatRoom() {
     return el?.scrollHeight - (el?.scrollTop + el?.clientHeight);
   }
 
-  function addMessageToChatRoom(event: { id: string; room_id: string; sender_id: number; type: string; content: string; sent_at: string | number | Date }) {
+  function addMessageToChatRoom(event: { id: string; room_id: string; sender_id: number; sender_username: string; type: string; content: string; sent_at: string | number | Date }) {
     const lastMessageHeightBefore = getLastMessageHeight() || 59;
 
     setMessages((prevMessages) => [
@@ -136,6 +137,7 @@ export default function ChatRoom() {
         id: event.id,
         room_id: event.room_id,
         sender_id: event.sender_id,
+        sender_username: event.sender_username,
         type: event.type,
         content: event.content,
         sent_at: event.sent_at,
@@ -186,6 +188,7 @@ export default function ChatRoom() {
         id: ulid(Date.now()),
         room_id: roomState.room.roomId!,
         sender_id: user.id!,
+        sender_username: user.username!,
         type: "text",
         content: value,
         sent_at: Date.now(),
@@ -304,7 +307,12 @@ export default function ChatRoom() {
                 case "text":
                   return (
                     <div key={message.id} className={wrapperClass}>
-                      <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>{message.content}</span>
+                      <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
+                        {roomState.room?.roomType === "group" && (
+                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
+                        )}
+                        <span className="block">{message.content}</span>
+                      </span>
                       {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
                     </div>
                   );
@@ -313,7 +321,10 @@ export default function ChatRoom() {
                   return (
                     <div key={message.id} className={wrapperClass}>
                       <span className={`p-2 min-w-[150px] max-w-[70%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
-                        <img src={message.content} alt={`image-${message.id}`} className="rounded-lg" />
+                        {roomState.room?.roomType === "group" && (
+                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
+                        )}
+                        <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg ${roomState.room?.roomType === "group" && "mt-2"}`} />
                       </span>
                       {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
                     </div>
@@ -322,16 +333,21 @@ export default function ChatRoom() {
                 case "file":
                   return (
                     <div key={message.id} className={wrapperClass}>
-                      <div className={`py-2 pl-2 pr-4 min-w-[150px] max-w-[50%] flex flex-row gap-x-2 rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
-                        <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-[#E6EEF5] text-[#151521] text-xs rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
-                        <div className="w-full">
-                          <span className="block font-bold break-all whitespace-normal">_100058428_mediaitem100058424.jpg</span>
-                          <a href="#" className="flex flex-row items-center text-sm gap-x-1 hover:underline">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-3">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
-                            <span>Download</span>
-                          </a>
+                      <div className={`py-2 pl-2 pr-4 min-w-[150px] max-w-[50%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
+                        {roomState.room?.roomType === "group" && (
+                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
+                        )}
+                        <div className={`flex flex-row gap-x-2 ${roomState.room?.roomType === "group" && "mt-2"}`}>
+                          <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-[#E6EEF5] text-[#151521] text-xs rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
+                          <div className="w-full">
+                            <span className="block font-bold break-all whitespace-normal">_100058428_mediaitem100058424.jpg</span>
+                            <a href="#" className="flex flex-row items-center text-sm gap-x-1 hover:underline">
+                              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-3">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                              </svg>
+                              <span>Download</span>
+                            </a>
+                          </div>
                         </div>
                       </div>
                       {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
