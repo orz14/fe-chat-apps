@@ -1,6 +1,8 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import useChat from "@/configs/api/chat";
+import { useToast } from "@/hooks/use-toast";
 import echo from "@/lib/echo";
+import { useLoadingRoomStore } from "@/stores/useLoadingRoomStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useUserDataStore } from "@/stores/useUserDataStore";
 import EachUtils from "@/utils/EachUtils";
@@ -12,20 +14,21 @@ import { useEffect, useRef, useState } from "react";
 import { monotonicFactory } from "ulid";
 
 export default function ChatRoom() {
+  const { toast } = useToast();
   const roomState = useRoomStore();
   const { user } = useUserDataStore();
   const { loadChats, sendText } = useChat();
   const ulid = monotonicFactory();
   const [messages, setMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const inputTextRef = useRef<HTMLInputElement | null>(null);
   const backToTopRef = useRef<HTMLButtonElement | null>(null);
   const newMessageRef = useRef<HTMLDivElement | null>(null);
+  const { loadingRoom, setLoadingRoom } = useLoadingRoomStore();
 
   async function handleLoadChats(lastSentAt: string | null, lastMessageId: string | null) {
-    setLoading(true);
+    setLoadingRoom(true);
     try {
       const resChats = await loadChats(roomState.room.roomId!, lastSentAt, lastMessageId);
       if (resChats?.status === 200) {
@@ -40,9 +43,14 @@ export default function ChatRoom() {
           roomName: null,
           roomPicture: null,
         });
+
+        toast({
+          variant: "destructive",
+          description: "Anda tidak memiliki akses.",
+        });
       }
     } finally {
-      setLoading(false);
+      setLoadingRoom(false);
     }
   }
 
@@ -52,7 +60,7 @@ export default function ChatRoom() {
 
   useEffect(() => {
     if (roomState.room?.roomId) {
-      setLoading(true);
+      setLoadingRoom(true);
       setMessages([]);
       newMessageRef.current?.classList.add("hidden");
       inputTextRef.current!.value = "";
@@ -96,6 +104,11 @@ export default function ChatRoom() {
               roomName: null,
               roomPicture: null,
             });
+
+            toast({
+              variant: "destructive",
+              description: "Anda tidak memiliki akses.",
+            });
           }
         });
 
@@ -130,21 +143,23 @@ export default function ChatRoom() {
     ]);
 
     requestAnimationFrame(() => {
-      if (event.sender_id === user.id) {
-        scrollToBottom("smooth");
-        return;
-      } else {
-        const messagesElement = containerRef.current;
+      setTimeout(() => {
+        if (event.sender_id === user.id) {
+          scrollToBottom("smooth");
+          return;
+        } else {
+          const messagesElement = containerRef.current;
 
-        if (messagesElement) {
-          const distanceFromBottom = getDistanceFromBottom(messagesElement);
-          const lastMessageHeightAfter = (getLastMessageHeight() || 59) + 20;
+          if (messagesElement) {
+            const distanceFromBottom = getDistanceFromBottom(messagesElement);
+            const lastMessageHeightAfter = (getLastMessageHeight() || 59) + 20;
 
-          if (distanceFromBottom === 0 || distanceFromBottom <= lastMessageHeightBefore + lastMessageHeightAfter) {
-            scrollToBottom("smooth");
+            if (distanceFromBottom === 0 || distanceFromBottom <= lastMessageHeightBefore + lastMessageHeightAfter) {
+              scrollToBottom("smooth");
+            }
           }
         }
-      }
+      }, 20);
     });
   }
 
@@ -184,24 +199,29 @@ export default function ChatRoom() {
       try {
         await sendText(event.id, event.room_id, event.type, event.content);
       } catch (err: any) {
-        alert(err.message);
-        // jika error hapus lagi message yg baru saja dikirim
         handleDeleteMessage(event.id);
+        toast({
+          variant: "destructive",
+          description: "Gagal mengirim pesan.",
+        });
       }
     }
   }
 
   function handleDeleteMessage(id: string) {
     setMessages((prevMessages) => prevMessages.filter((message) => message.id !== id));
+    scrollToBottom("smooth");
   }
 
   function scrollToBottom(behavior: "smooth" | "auto") {
     requestAnimationFrame(() => {
-      if (!messagesEndRef.current) return;
-      messagesEndRef.current.scrollIntoView({
-        behavior,
-        block: "end",
-      });
+      setTimeout(() => {
+        if (!messagesEndRef.current) return;
+        messagesEndRef.current.scrollIntoView({
+          behavior,
+          block: "end",
+        });
+      }, 20);
     });
   }
 
@@ -212,6 +232,21 @@ export default function ChatRoom() {
     const chatDivs = messagesElement.querySelectorAll("div.chat");
     const lastChat = chatDivs[chatDivs.length - 1] as HTMLElement | undefined;
     return lastChat ? lastChat.offsetHeight : 0;
+  }
+
+  function isNextMessageDifferent(message: { sender_id: number; sent_at: string | number | Date }, index: number) {
+    const currentTime = getFormattedTime(message.sent_at);
+    const currentSender = message.sender_id;
+
+    const nextMessage = messages[index + 1];
+    const nextTime = nextMessage ? getFormattedTime(nextMessage.sent_at) : null;
+    const nextSender = nextMessage ? nextMessage.sender_id : null;
+
+    return !nextMessage || currentSender !== nextSender || currentTime !== nextTime;
+  }
+
+  function getExtension(filePath: string) {
+    return filePath.split(".").pop()?.toLowerCase() ?? "";
   }
 
   return (
@@ -253,25 +288,73 @@ export default function ChatRoom() {
         <div ref={containerRef} className="flex flex-col w-full h-full pt-4 px-4 space-y-1 overflow-x-hidden overflow-y-auto">
           <EachUtils
             of={messages}
-            render={(message: any) => {
-              return message.type === "text" ? (
-                <div key={message.id} className={`w-full flex flex-col text-pretty chat ${message.sender_id === user.id ? "items-end" : "items-start"}`}>
-                  <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${message.sender_id === user.id ? "bg-indigo-500 text-white rounded-bl-xl" : "bg-white text-black rounded-br-xl"}`}>{message.content}</span>
-                  <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${message.sender_id === user.id ? "bg-indigo-500 text-gray-50" : "bg-white text-gray-400"}`}>{getFormattedTime(message.sent_at)}</span>
-                </div>
-              ) : (
-                "coming soon"
-              );
+            render={(message: any, index: number) => {
+              const showTimestamp = isNextMessageDifferent(message, index);
+              const isOwnMessage = message.sender_id === user.id;
+              const currentTime = getFormattedTime(message.sent_at);
+
+              const bubbleColorClass = isOwnMessage ? "bg-indigo-500 text-white" : "bg-white text-black";
+              const bubbleRadiusClass = showTimestamp ? (isOwnMessage ? "rounded-bl-xl" : "rounded-br-xl") : "rounded-b-xl";
+
+              const timestampClass = isOwnMessage ? "bg-indigo-500 text-gray-50" : "bg-white text-gray-400";
+
+              const wrapperClass = `w-full flex flex-col text-pretty chat ${isOwnMessage ? "items-end" : "items-start"}`;
+
+              switch (message.type) {
+                case "text":
+                  return (
+                    <div key={message.id} className={wrapperClass}>
+                      <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>{message.content}</span>
+                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
+                    </div>
+                  );
+
+                case "image":
+                  return (
+                    <div key={message.id} className={wrapperClass}>
+                      <span className={`p-2 min-w-[150px] max-w-[70%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
+                        <img src={message.content} alt={`image-${message.id}`} className="rounded-lg" />
+                      </span>
+                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
+                    </div>
+                  );
+
+                case "file":
+                  return (
+                    <div key={message.id} className={wrapperClass}>
+                      <div className={`py-2 pl-2 pr-4 min-w-[150px] max-w-[50%] flex flex-row gap-x-2 rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
+                        <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-[#E6EEF5] text-[#151521] text-xs rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
+                        <div className="w-full">
+                          <span className="block font-bold break-all whitespace-normal">_100058428_mediaitem100058424.jpg</span>
+                          <a href="#" className="flex flex-row items-center text-sm gap-x-1 hover:underline">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span>Download</span>
+                          </a>
+                        </div>
+                      </div>
+                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
+                    </div>
+                  );
+              }
             }}
-            isLoading={loading}
+            isLoading={loadingRoom}
             Loader={() => (
               <div className="w-full h-full flex justify-center items-center">
                 <SpinnerLoader width="w-[25px]" />
               </div>
             )}
             Empty={() => (
-              <div className="w-full h-full flex justify-center items-center">
-                <span>No conversation</span>
+              <div className="w-full h-full flex flex-col justify-center items-center gap-y-4 text-indigo-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-32">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"
+                  />
+                </svg>
+                <span className="font-bold">Start conversations</span>
               </div>
             )}
           />
@@ -314,7 +397,7 @@ export default function ChatRoom() {
             className="w-full px-4 py-2.5 text-sm text-indigo-900 font-semibold placeholder-gray-400 bg-white rounded-md appearance-none placeholder:text-xs focus:outline-none focus:border-transparent transition-colors duration-300 ease-in-out"
           />
 
-          <button type="submit" className="text-white appearance-none" disabled={loading}>
+          <button type="submit" className="text-white appearance-none" disabled={loadingRoom}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
               <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
             </svg>

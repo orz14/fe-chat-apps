@@ -6,6 +6,7 @@ import NotFound from "@/components/NotFound";
 import useAuth from "@/configs/api/auth";
 import { decryptData } from "@/lib/crypto";
 import { usePageStore } from "@/stores/usePageStore";
+import { Toaster } from "@/components/ui/toaster";
 
 const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => <MainLoader /> });
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
@@ -86,8 +87,11 @@ export default function IndexPage() {
   }, []);
 
   return (
-    <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
-      <div className="w-full h-full overflow-hidden lg:rounded-2xl">{renderPage()}</div>
-    </main>
+    <>
+      <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
+        <div className="w-full h-full overflow-hidden lg:rounded-2xl">{renderPage()}</div>
+      </main>
+      <Toaster />
+    </>
   );
 }

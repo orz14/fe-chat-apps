@@ -1,15 +1,19 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import useRoom from "@/configs/api/room";
+import { useToast } from "@/hooks/use-toast";
 import { useGroupRoomsStore } from "@/stores/useGroupRoomsStore";
+import { useLoadingRoomStore } from "@/stores/useLoadingRoomStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import EachUtils from "@/utils/EachUtils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function GroupChats() {
+  const { toast } = useToast();
   const { group } = useRoom();
   const roomState = useRoomStore();
   const roomsState = useGroupRoomsStore();
+  const { loadingRoom } = useLoadingRoomStore();
   const [loading, setLoading] = useState<boolean>(true);
 
   async function handleFetch() {
@@ -19,8 +23,11 @@ export default function GroupChats() {
       if (res?.status === 200) {
         roomsState.setRooms(res.data.rooms);
       }
-    } catch (err) {
-      console.log(err);
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        description: "Terjadi kesalahan.",
+      });
     } finally {
       setLoading(false);
     }
@@ -49,6 +56,7 @@ export default function GroupChats() {
               roomPicture: room.room_picture,
             })
           }
+          disabled={loadingRoom}
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
             {room.room_picture?.length > 0 ? (
@@ -80,7 +88,7 @@ export default function GroupChats() {
       )}
       Empty={() => (
         <div className="w-full text-center p-4">
-          <span>No conversation</span>
+          <span>No conversations</span>
         </div>
       )}
     />
