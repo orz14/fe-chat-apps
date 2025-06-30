@@ -7,16 +7,85 @@ import { useUserDataStore } from "@/stores/useUserDataStore";
 import { useEffect } from "react";
 import { decryptData } from "@/lib/crypto";
 import MetaTag from "../MetaTag";
-import { requestNotificationPermission } from "@/utils/notifications";
+import { requestNotificationPermission, showNotification } from "@/utils/notifications";
+import echo from "@/lib/echo";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
 export default function Main() {
+  const { toast } = useToast();
   const roomState = useRoomStore();
   const sidebarState = useSidebarStore();
   const userState = useUserDataStore();
 
+  function GlobalNotificationListener(userId: number) {
+    const userListen = `user.${userId}`;
+    const channel = echo?.private(userListen);
+
+    channel
+      ?.listen(".message.received", (e: any) => {
+        if (e.content.sender_id === userId) return;
+
+        let content: object = {};
+        if (e.content.room_type === "personal") {
+          if (e.content.type === "text") {
+            content = {
+              body: e.content.content,
+            };
+          } else if (e.content.type === "image") {
+            content = {
+              image: e.content.content,
+            } as any;
+          } else if (e.content.type === "file") {
+            content = {
+              body: "Mengirim sebuah file.",
+            };
+          }
+          showNotification(`Pesan dari ${e.content.sender_name}`, content);
+        } else if (e.content.room_type === "group") {
+          if (e.content.type === "text") {
+            content = {
+              body: `${e.content.sender_username}: ${e.content.content}`,
+            };
+          } else if (e.content.type === "image") {
+            content = {
+              body: `${e.content.sender_username} mengirim sebuah gambar.`,
+              image: e.content.content,
+            } as any;
+          } else if (e.content.type === "file") {
+            content = {
+              body: `${e.content.sender_username} mengirim sebuah file.`,
+            };
+          }
+          showNotification(e.content.room_name, content);
+        }
+      })
+      .error((err: any) => {
+        if (err.status === 403) {
+          roomState.setRoom({
+            targetElement: "chat-box",
+            roomType: null,
+            roomId: null,
+            roomName: null,
+            roomPicture: null,
+          });
+
+          toast({
+            variant: "destructive",
+            description: "Anda tidak memiliki akses.",
+          });
+        }
+      });
+
+    return () => {
+      channel?.stopListening(".message.received");
+      echo?.leave(userListen);
+    };
+  }
+
   useEffect(() => {
+    let cleanupFn: (() => void) | undefined;
     const credentials = localStorage.getItem("credentials") ?? null;
     if (credentials) {
       const decryptedData = decryptData(credentials);
@@ -29,10 +98,16 @@ export default function Main() {
           avatar: decryptedData.user.avatar,
           token: decryptedData.token,
         });
+
+        cleanupFn = GlobalNotificationListener(decryptedData.user.id);
       }
     }
 
     requestNotificationPermission();
+
+    return () => {
+      cleanupFn?.();
+    };
   }, []);
 
   const renderSidebar = () => {

@@ -6,7 +6,6 @@ import { useLoadingRoomStore } from "@/stores/useLoadingRoomStore";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useUserDataStore } from "@/stores/useUserDataStore";
 import EachUtils from "@/utils/EachUtils";
-import { showNotification } from "@/utils/notifications";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import Image from "next/image";
@@ -59,6 +58,8 @@ export default function ChatRoom() {
   }, [roomState.room]);
 
   useEffect(() => {
+    let channel: any = null;
+
     if (roomState.room?.roomId) {
       setLoadingRoom(true);
       setMessages([]);
@@ -72,29 +73,13 @@ export default function ChatRoom() {
       })();
 
       const roomName = `room.${roomState.room.roomId}`;
-      const channel = echo?.private(roomName);
+      channel = echo?.private(roomName);
 
       channel
         ?.listen(".message.sent", (e: any) => {
           if (e.content.sender_id === user.id) return;
           addMessageToChatRoom(e.content);
           newMessageRef.current?.classList.remove("hidden");
-
-          let content: object = {};
-          if (e.content.type === "text") {
-            content = {
-              body: e.content.content,
-            };
-          } else if (e.content.type === "image") {
-            content = {
-              image: e.content.content,
-            } as any;
-          } else if (e.content.type === "file") {
-            content = {
-              body: "Mengirim sebuah file.",
-            };
-          }
-          showNotification(`Pesan dari ${e.content.sender_name}`, content);
         })
         .error((err: any) => {
           if (err.status === 403) {
@@ -112,12 +97,12 @@ export default function ChatRoom() {
             });
           }
         });
-
-      return () => {
-        channel?.stopListening(".message.sent");
-        echo?.leave(roomName);
-      };
     }
+
+    return () => {
+      channel.stopListening(".message.sent");
+      echo?.leave(`room.${roomState.room?.roomId}`);
+    };
   }, [roomState.room?.roomId]);
 
   function getFormattedTime(time: string | number | Date): string {
@@ -129,7 +114,7 @@ export default function ChatRoom() {
   }
 
   function addMessageToChatRoom(event: { id: string; room_id: string; sender_id: number; sender_username: string; type: string; content: string; sent_at: string | number | Date }) {
-    const lastMessageHeightBefore = getLastMessageHeight() || 59;
+    const lastMessageHeightBefore = getLastMessageHeight() || 60;
 
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -154,7 +139,7 @@ export default function ChatRoom() {
 
           if (messagesElement) {
             const distanceFromBottom = getDistanceFromBottom(messagesElement);
-            const lastMessageHeightAfter = (getLastMessageHeight() || 59) + 20;
+            const lastMessageHeightAfter = (getLastMessageHeight() || 60) + 20;
 
             if (distanceFromBottom === 0 || distanceFromBottom <= lastMessageHeightBefore + lastMessageHeightAfter) {
               scrollToBottom("smooth");
@@ -168,7 +153,7 @@ export default function ChatRoom() {
   const messagesElement = containerRef.current;
   if (messagesElement) {
     messagesElement.addEventListener("scroll", function () {
-      const lastMessageHeight = (getLastMessageHeight() || 59) + 16;
+      const lastMessageHeight = (getLastMessageHeight() || 60) + 16;
       const distanceFromBottom = getDistanceFromBottom(messagesElement);
 
       if (distanceFromBottom <= lastMessageHeight) {
@@ -296,49 +281,43 @@ export default function ChatRoom() {
               const isOwnMessage = message.sender_id === user.id;
               const currentTime = getFormattedTime(message.sent_at);
 
+              const wrapperClass = `w-full flex text-pretty chat ${isOwnMessage ? "justify-end" : "justify-start"}`;
               const bubbleColorClass = isOwnMessage ? "bg-indigo-500 text-white" : "bg-white text-black";
-              const bubbleRadiusClass = showTimestamp ? (isOwnMessage ? "rounded-bl-xl" : "rounded-br-xl") : "rounded-b-xl";
-
-              const timestampClass = isOwnMessage ? "bg-indigo-500 text-gray-50" : "bg-white text-gray-400";
-
-              const wrapperClass = `w-full flex flex-col text-pretty chat ${isOwnMessage ? "items-end" : "items-start"}`;
+              const chatClass = `flex flex-col rounded-xl overflow-hidden ${bubbleColorClass}`;
+              const dataClass = `w-max py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-200 text-indigo-950"}`;
 
               switch (message.type) {
                 case "text":
                   return (
                     <div key={message.id} className={wrapperClass}>
-                      <span className={`px-4 py-2 min-w-[150px] max-w-[90%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
-                        {roomState.room?.roomType === "group" && (
-                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
-                        )}
-                        <span className="block">{message.content}</span>
-                      </span>
-                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
+                      <div className={`min-w-[140px] max-w-[90%] ${chatClass}`}>
+                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        <span className="block px-4 py-2">{message.content}</span>
+                        {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
+                      </div>
                     </div>
                   );
 
                 case "image":
                   return (
                     <div key={message.id} className={wrapperClass}>
-                      <span className={`p-2 min-w-[150px] max-w-[70%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
-                        {roomState.room?.roomType === "group" && (
-                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
-                        )}
-                        <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg ${roomState.room?.roomType === "group" && "mt-2"}`} />
-                      </span>
-                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
+                      <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
+                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        <div className="block p-2">
+                          <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg`} />
+                        </div>
+                        {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
+                      </div>
                     </div>
                   );
 
                 case "file":
                   return (
                     <div key={message.id} className={wrapperClass}>
-                      <div className={`py-2 pl-2 pr-4 min-w-[150px] max-w-[50%] rounded-t-xl ${bubbleRadiusClass} ${bubbleColorClass}`}>
-                        {roomState.room?.roomType === "group" && (
-                          <span className={`py-[2px] px-2 text-[9px] font-semibold whitespace-nowrap rounded-full ${isOwnMessage ? "bg-indigo-600 text-gray-50" : "bg-indigo-100 text-indigo-950"}`}>{message.sender_username}</span>
-                        )}
-                        <div className={`flex flex-row gap-x-2 ${roomState.room?.roomType === "group" && "mt-2"}`}>
-                          <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-[#E6EEF5] text-[#151521] text-xs rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
+                      <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
+                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        <div className={`flex flex-row gap-x-2 py-2 pl-2 pr-4`}>
+                          <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-indigo-100 text-black text-[11px] leading-none rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
                           <div className="w-full">
                             <span className="block font-bold break-all whitespace-normal">_100058428_mediaitem100058424.jpg</span>
                             <a href="#" className="flex flex-row items-center text-sm gap-x-1 hover:underline">
@@ -349,8 +328,8 @@ export default function ChatRoom() {
                             </a>
                           </div>
                         </div>
+                        {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
                       </div>
-                      {showTimestamp && <span className={`mt-[-1px] py-[2px] px-2 text-[9px] whitespace-nowrap rounded-b-xl ${timestampClass}`}>{currentTime}</span>}
                     </div>
                   );
               }
