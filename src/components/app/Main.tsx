@@ -10,6 +10,7 @@ import MetaTag from "../MetaTag";
 import { requestNotificationPermission, showNotification } from "@/utils/notifications";
 import echo from "@/lib/echo";
 import { useToast } from "@/hooks/use-toast";
+import { usePersonalRoomsStore } from "@/stores/usePersonalRoomsStore";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
@@ -18,6 +19,7 @@ export default function Main() {
   const roomState = useRoomStore();
   const sidebarState = useSidebarStore();
   const userState = useUserDataStore();
+  const { setRooms } = usePersonalRoomsStore();
 
   function GlobalNotificationListener(userId: number) {
     const userListen = `user.${userId}`;
@@ -109,6 +111,40 @@ export default function Main() {
       cleanupFn?.();
     };
   }, []);
+
+  // useEffect(() => {
+  //   const presence = echo?.join("user.presence");
+
+  //   presence.here((users: any[]) => {
+  //     // Inisialisasi siapa saja yang online
+  //     updateOnlineStatus(users);
+  //   });
+
+  //   type RoomType = "personal";
+
+  //   type RoomsType = {
+  //     room_type: RoomType;
+  //     room_id: string;
+  //     room_name: string;
+  //     room_picture: string;
+  //     user_id: number;
+  //     is_online: boolean;
+  //   };
+
+  //   presence.joining((user: any) => {
+  //     // Ada user baru join (online)
+  //     setRooms((rooms: RoomsType[]) => rooms.map((r: RoomsType) => (r.user_id === user.id ? { ...r, is_online: true } : r)));
+  //   });
+
+  //   presence.leaving((user: any) => {
+  //     // Ada user keluar (offline)
+  //     setRooms((prev) => prev.map((r) => (r.user_id === user.id ? { ...r, is_online: false } : r)));
+  //   });
+
+  //   return () => {
+  //     echo?.leave("user.presence");
+  //   };
+  // }, []);
 
   const renderSidebar = () => {
     switch (sidebarState.sidebar) {
