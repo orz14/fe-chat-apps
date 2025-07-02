@@ -20,25 +20,16 @@ const GroupChats = dynamic(() => import("@/components/app/chats/Group"), {
 });
 
 export default function Chats() {
-  const chatsState = useChatsStore();
-
-  const renderChats = () => {
-    switch (chatsState.chats.target) {
-      case "personal":
-        return <PersonalChats />;
-      case "group":
-        return <GroupChats />;
-    }
-  };
+  const { chats, setChats } = useChatsStore();
 
   useEffect(() => {
     navigate("personal");
   }, []);
 
-  const navigate = (target: string) => {
-    if (target === chatsState.chats.target) return;
+  function navigate(target: string) {
+    if (target === chats.target) return;
 
-    chatsState.setChats({
+    setChats({
       target: "loader",
       component: (
         <div className="w-full flex justify-center items-center p-4">
@@ -49,19 +40,28 @@ export default function Chats() {
 
     switch (target) {
       case "personal":
-        chatsState.setChats({
+        setChats({
           target: "personal",
           component: null,
         });
         break;
       case "group":
-        chatsState.setChats({
+        setChats({
           target: "group",
           component: null,
         });
         break;
     }
-  };
+  }
+
+  function renderChats() {
+    switch (chats.target) {
+      case "personal":
+        return <PersonalChats />;
+      case "group":
+        return <GroupChats />;
+    }
+  }
 
   return (
     <>
@@ -82,18 +82,14 @@ export default function Chats() {
       <div className="flex flex-row items-center pb-1 text-xs gap-x-2">
         <button
           type="button"
-          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${
-            chatsState.chats.target === "personal" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"
-          }`}
+          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${chats.target === "personal" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"}`}
           onClick={() => navigate("personal")}
         >
           Personal
         </button>
         <button
           type="button"
-          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${
-            chatsState.chats.target === "group" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"
-          }`}
+          className={`appearance-none px-3 py-1 font-semibold transition-colors duration-300 ease-in-out rounded-full hover:bg-indigo-300 ${chats.target === "group" ? "text-indigo-700 bg-indigo-300" : "text-black bg-indigo-100"}`}
           onClick={() => navigate("group")}
         >
           Group

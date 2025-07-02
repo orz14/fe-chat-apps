@@ -8,11 +8,13 @@ type RoomType = {
   roomId: string | null;
   roomName: string | null;
   roomPicture: string | null;
+  userId: number | null;
+  isOnline: boolean | null;
 };
 
 type RoomState = {
   room: RoomType;
-  setRoom: (room: RoomType) => void;
+  setRoom: (room: RoomType | ((prevRooms: RoomType) => RoomType)) => void;
 };
 
 export const useRoomStore = create<RoomState>((set) => ({
@@ -22,6 +24,12 @@ export const useRoomStore = create<RoomState>((set) => ({
     roomId: null,
     roomName: null,
     roomPicture: null,
+    userId: null,
+    isOnline: null,
   },
-  setRoom: (room: RoomType) => set({ room: room }),
+  // setRoom: (room: RoomType) => set({ room: room }),
+  setRoom: (updater) =>
+    set((state) => ({
+      room: typeof updater === "function" ? updater(state.room) : updater,
+    })),
 }));

@@ -12,15 +12,6 @@ export default function Index() {
     roomId: null,
   });
 
-  const renderRoom = () => {
-    switch (element.target) {
-      case "chat-box":
-        return <ChatBox />;
-      case "chat-room":
-        return <ChatRoom />;
-    }
-  };
-
   useEffect(() => {
     if (room?.targetElement === "chat-box") {
       navigate("chat-box");
@@ -29,7 +20,7 @@ export default function Index() {
     }
   }, [room]);
 
-  const navigate = (target: string) => {
+  function navigate(target: string) {
     if (target === element.target && element.roomId === room?.roomId) return;
 
     switch (target) {
@@ -46,7 +37,16 @@ export default function Index() {
         });
         break;
     }
-  };
+  }
+
+  function renderRoom() {
+    switch (element.target) {
+      case "chat-box":
+        return <ChatBox />;
+      case "chat-room":
+        return <ChatRoom />;
+    }
+  }
 
   return renderRoom();
 }

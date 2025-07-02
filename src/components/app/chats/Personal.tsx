@@ -11,17 +11,21 @@ import { useEffect, useState } from "react";
 export default function PersonalChats() {
   const { toast } = useToast();
   const { personal } = useRoom();
+  const { rooms, setRooms } = usePersonalRoomsStore();
   const roomState = useRoomStore();
-  const roomsState = usePersonalRoomsStore();
   const { loadingRoom } = useLoadingRoomStore();
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    handleFetch();
+  }, []);
 
   async function handleFetch() {
     setLoading(true);
     try {
       const res = await personal();
       if (res?.status === 200) {
-        roomsState.setRooms(res.data.rooms);
+        setRooms(res.data.rooms);
       }
     } catch (err: any) {
       toast({
@@ -33,13 +37,22 @@ export default function PersonalChats() {
     }
   }
 
-  useEffect(() => {
-    handleFetch();
-  }, []);
+  function handleRoomState(room: any) {
+    if (roomState?.room?.roomId === room.room_id) return;
+    roomState.setRoom({
+      targetElement: "chat-room",
+      roomType: room.room_type,
+      roomId: room.room_id,
+      roomName: room.room_name,
+      roomPicture: room.room_picture,
+      userId: room.user_id,
+      isOnline: false,
+    });
+  }
 
   return (
     <EachUtils
-      of={roomsState.rooms}
+      of={rooms}
       render={(room: any) => (
         <button
           key={room.room_id}
@@ -47,15 +60,7 @@ export default function PersonalChats() {
           className={`appearance-none w-full flex flex-row items-center justify-between p-4 font-bold text-[13px] text-indigo-900 transition-all duration-300 ease-in-out rounded-xl gap-x-2 hover:bg-indigo-300 overflow-hidden ${
             roomState?.room?.roomId === room.room_id ? "bg-indigo-300" : "bg-indigo-100"
           }`}
-          onClick={() =>
-            roomState.setRoom({
-              targetElement: "chat-room",
-              roomType: room.room_type,
-              roomId: room.room_id,
-              roomName: room.room_name,
-              roomPicture: room.room_picture,
-            })
-          }
+          onClick={() => handleRoomState(room)}
           disabled={loadingRoom}
         >
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">

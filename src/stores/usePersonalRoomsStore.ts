@@ -8,7 +8,6 @@ type RoomsType = {
   room_name: string;
   room_picture: string;
   user_id: number;
-  is_online: boolean;
 };
 
 type PersonalRoomsState = {
@@ -18,11 +17,5 @@ type PersonalRoomsState = {
 
 export const usePersonalRoomsStore = create<PersonalRoomsState>((set) => ({
   rooms: [],
-  setRooms: (rooms: RoomsType[]) =>
-    set({
-      rooms: rooms.map((room) => ({
-        ...room,
-        is_online: false,
-      })),
-    }),
+  setRooms: (rooms: RoomsType[]) => set({ rooms: rooms }),
 }));
