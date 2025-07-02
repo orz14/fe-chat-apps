@@ -14,8 +14,9 @@ import { monotonicFactory } from "ulid";
 
 export default function ChatRoom() {
   const { toast } = useToast();
-  const roomState = useRoomStore();
+  const { room, setRoom } = useRoomStore();
   const { user } = useUserDataStore();
+  const { loadingRoom, setLoadingRoom } = useLoadingRoomStore();
   const { loadChats, sendText } = useChat();
   const ulid = monotonicFactory();
   const [messages, setMessages] = useState<any[]>([]);
@@ -24,43 +25,17 @@ export default function ChatRoom() {
   const inputTextRef = useRef<HTMLInputElement | null>(null);
   const backToTopRef = useRef<HTMLButtonElement | null>(null);
   const newMessageRef = useRef<HTMLDivElement | null>(null);
-  const { loadingRoom, setLoadingRoom } = useLoadingRoomStore();
 
-  async function handleLoadChats(lastSentAt: string | null, lastMessageId: string | null) {
-    setLoadingRoom(true);
-    try {
-      const resChats = await loadChats(roomState.room.roomId!, lastSentAt, lastMessageId);
-      if (resChats?.status === 200) {
-        setMessages(resChats.data.chats);
-      }
-    } catch (err) {
-      if (err.status === 403) {
-        roomState.setRoom({
-          targetElement: "chat-box",
-          roomType: null,
-          roomId: null,
-          roomName: null,
-          roomPicture: null,
-        });
-
-        toast({
-          variant: "destructive",
-          description: "Anda tidak memiliki akses.",
-        });
-      }
-    } finally {
-      setLoadingRoom(false);
-    }
-  }
-
+  // Input autofocus
   useEffect(() => {
     inputTextRef.current?.focus();
-  }, [roomState.room]);
+  }, [room]);
 
+  // Load chats & listen room
   useEffect(() => {
     let channel: any = null;
 
-    if (roomState.room?.roomId) {
+    if (room?.roomId) {
       setLoadingRoom(true);
       setMessages([]);
       newMessageRef.current?.classList.add("hidden");
@@ -72,28 +47,36 @@ export default function ChatRoom() {
         scrollToBottom("auto");
       })();
 
-      const roomName = `room.${roomState.room.roomId}`;
+      const roomName = `room.${room.roomId}`;
       channel = echo?.private(roomName);
 
       channel
         ?.listen(".message.sent", (e: any) => {
+          if (!e?.content) return;
           if (e.content.sender_id === user.id) return;
           addMessageToChatRoom(e.content);
           newMessageRef.current?.classList.remove("hidden");
         })
         .error((err: any) => {
           if (err.status === 403) {
-            roomState.setRoom({
+            setRoom({
               targetElement: "chat-box",
               roomType: null,
               roomId: null,
               roomName: null,
               roomPicture: null,
+              userId: null,
+              isOnline: null,
             });
 
             toast({
               variant: "destructive",
               description: "Anda tidak memiliki akses.",
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              description: "Terjadi kesalahan.",
             });
           }
         });
@@ -101,9 +84,43 @@ export default function ChatRoom() {
 
     return () => {
       channel.stopListening(".message.sent");
-      echo?.leave(`room.${roomState.room?.roomId}`);
+      echo?.leave(`room.${room?.roomId}`);
     };
-  }, [roomState.room?.roomId]);
+  }, [room?.roomId]);
+
+  async function handleLoadChats(lastSentAt: string | null, lastMessageId: string | null) {
+    setLoadingRoom(true);
+    try {
+      const resChats = await loadChats(room.roomId!, lastSentAt, lastMessageId);
+      if (resChats?.status === 200) {
+        setMessages(resChats.data.chats);
+      }
+    } catch (err) {
+      if (err.status === 403) {
+        setRoom({
+          targetElement: "chat-box",
+          roomType: null,
+          roomId: null,
+          roomName: null,
+          roomPicture: null,
+          userId: null,
+          isOnline: null,
+        });
+
+        toast({
+          variant: "destructive",
+          description: "Anda tidak memiliki akses.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          description: "Terjadi kesalahan.",
+        });
+      }
+    } finally {
+      setLoadingRoom(false);
+    }
+  }
 
   function getFormattedTime(time: string | number | Date): string {
     return format(new Date(time), "dd MMM yyyy HH:mm", { locale: id });
@@ -150,20 +167,6 @@ export default function ChatRoom() {
     });
   }
 
-  const messagesElement = containerRef.current;
-  if (messagesElement) {
-    messagesElement.addEventListener("scroll", function () {
-      const lastMessageHeight = (getLastMessageHeight() || 60) + 16;
-      const distanceFromBottom = getDistanceFromBottom(messagesElement);
-
-      if (distanceFromBottom <= lastMessageHeight) {
-        backToTopRef.current?.classList.remove("!scale-100");
-      } else {
-        backToTopRef.current?.classList.add("!scale-100");
-      }
-    });
-  }
-
   async function handleSendText(e: React.FormEvent) {
     e.preventDefault();
 
@@ -171,7 +174,7 @@ export default function ChatRoom() {
     if (value && value.trim() !== "" && value !== null && value !== undefined) {
       const event = {
         id: ulid(Date.now()),
-        room_id: roomState.room.roomId!,
+        room_id: room.roomId!,
         sender_id: user.id!,
         sender_username: user.username!,
         type: "text",
@@ -237,20 +240,28 @@ export default function ChatRoom() {
     return filePath.split(".").pop()?.toLowerCase() ?? "";
   }
 
+  const messagesElement = containerRef.current;
+  if (messagesElement) {
+    messagesElement.addEventListener("scroll", function () {
+      const lastMessageHeight = (getLastMessageHeight() || 60) + 16;
+      const distanceFromBottom = getDistanceFromBottom(messagesElement);
+
+      if (distanceFromBottom <= lastMessageHeight) {
+        backToTopRef.current?.classList.remove("!scale-100");
+      } else {
+        backToTopRef.current?.classList.add("!scale-100");
+      }
+    });
+  }
+
   return (
     <div className="w-full h-full">
       <div className="flex flex-col justify-between h-full">
         <div className="flex flex-row items-center p-4 font-bold text-white bg-indigo-400 gap-x-2 select-none">
-          {(roomState.room?.roomPicture?.length ?? 0) > 0 ? (
-            <Image src={roomState.room.roomPicture!} alt={roomState.room?.roomName || "Room picture"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
-          ) : roomState.room?.roomType === "personal" ? (
-            <Image
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(roomState.room?.roomName || "User")}`}
-              alt={roomState.room?.roomName || "User Avatar"}
-              width={50}
-              height={50}
-              className="object-cover rounded-full size-10 pointer-events-none"
-            />
+          {(room?.roomPicture?.length ?? 0) > 0 ? (
+            <Image src={room.roomPicture!} alt={room?.roomName || "Room picture"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
+          ) : room?.roomType === "personal" ? (
+            <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(room?.roomName || "User")}`} alt={room?.roomName || "User Avatar"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
           ) : (
             <div className="size-10 flex justify-center items-center bg-[#ddd] text-indigo-900 rounded-full pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-7">
@@ -264,8 +275,8 @@ export default function ChatRoom() {
             </div>
           )}
           <div className="leading-tight whitespace-nowrap pointer-events-none">
-            <span className="block">{roomState.room.roomName}</span>
-            {roomState.room?.roomType === "personal" && (
+            <span className="block">{room.roomName}</span>
+            {room?.roomType === "personal" && room?.isOnline && (
               <span id="userStatus" className="block text-xs text-indigo-100">
                 Online
               </span>
@@ -291,7 +302,7 @@ export default function ChatRoom() {
                   return (
                     <div key={message.id} className={wrapperClass}>
                       <div className={`min-w-[140px] max-w-[90%] ${chatClass}`}>
-                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        {room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
                         <span className="block px-4 py-2">{message.content}</span>
                         {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
                       </div>
@@ -302,7 +313,7 @@ export default function ChatRoom() {
                   return (
                     <div key={message.id} className={wrapperClass}>
                       <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
-                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        {room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
                         <div className="block p-2">
                           <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg`} />
                         </div>
@@ -315,7 +326,7 @@ export default function ChatRoom() {
                   return (
                     <div key={message.id} className={wrapperClass}>
                       <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
-                        {roomState.room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
+                        {room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
                         <div className={`flex flex-row gap-x-2 py-2 pl-2 pr-4`}>
                           <div className="aspect-[3/4] w-14 flex justify-center items-center shrink-0 bg-indigo-100 text-black text-[11px] leading-none rounded-lg select-none">{`.${getExtension(message.content)}`}</div>
                           <div className="w-full">

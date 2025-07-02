@@ -12,56 +12,58 @@ export default function AuthorizationCallbackPage() {
   const { toast } = useToast();
   const { currentUser } = useAuth();
 
-  async function handleCatch(err: any) {
-    if (err.status !== 401) {
-      // await writeLogClient("error", err);
-      router.push("/");
-      toast({
-        variant: "destructive",
-        description: err.message,
-      });
-    }
-  }
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      const { token } = router.query;
+
+      if (!token) {
+        toast({
+          variant: "destructive",
+          description: "Login failed.",
+        });
+        router.push("/");
+      } else if (typeof token === "string") {
+        handleLogin(token);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeout);
+  }, [router.query]);
 
   async function handleLogin(token: string) {
     try {
-      const resUser = await currentUser(token);
-      if (resUser?.status === 200) {
+      const res = await currentUser(token);
+      if (res?.status === 200) {
         const user = {
-          id: resUser.data.data.id,
-          name: resUser.data.data.name,
-          username: resUser.data.data.username,
-          email: resUser.data.data.email,
-          avatar: resUser.data.data.avatar,
+          id: res.data.data.id,
+          name: res.data.data.name,
+          username: res.data.data.username,
+          email: res.data.data.email,
+          avatar: res.data.data.avatar,
         };
 
         const encryptedData = encryptData({ token, user });
         if (encryptedData) {
           localStorage.setItem("credentials", encryptedData);
         }
-
-        router.push("/");
       }
-    } catch (err) {
-      handleCatch(err);
+    } catch (err: any) {
+      // await writeLogClient("error", err);
+      if (err.status === 401) {
+        toast({
+          variant: "destructive",
+          description: "Login failed.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          description: err.message,
+        });
+      }
+    } finally {
+      router.push("/");
     }
   }
-
-  useEffect(() => {
-    const { token, status } = router.query;
-
-    if (status && status == "failed") {
-      router.push("/");
-      toast({
-        variant: "destructive",
-        description: "Login failed.",
-      });
-    }
-
-    if (token) {
-      handleLogin(token as string);
-    }
-  }, [router.query]);
 
   return (
     <>

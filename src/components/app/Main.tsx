@@ -3,142 +3,52 @@ import dynamic from "next/dynamic";
 import Index from "./room/Index";
 import { useRoomStore } from "@/stores/useRoomStore";
 import { useSidebarStore } from "@/stores/useSidebarStore";
-import { useUserDataStore } from "@/stores/useUserDataStore";
-import { useEffect } from "react";
-import { decryptData } from "@/lib/crypto";
 import MetaTag from "../MetaTag";
-import { requestNotificationPermission, showNotification } from "@/utils/notifications";
-import echo from "@/lib/echo";
-import { useToast } from "@/hooks/use-toast";
+import { useNotificationListener } from "@/hooks/useNotificationListener";
+import { usePresenceListener } from "@/hooks/usePresenceListener";
+import { useInitializeUser } from "@/hooks/useInitializeUser";
 
 const Profile = dynamic(() => import("@/components/app/Profile"));
 
 export default function Main() {
-  const { toast } = useToast();
-  const roomState = useRoomStore();
-  const sidebarState = useSidebarStore();
-  const userState = useUserDataStore();
+  const { setRoom } = useRoomStore();
+  const { sidebar, setSidebar } = useSidebarStore();
 
-  function GlobalNotificationListener(userId: number) {
-    const userListen = `user.${userId}`;
-    const channel = echo?.private(userListen);
+  useInitializeUser();
+  useNotificationListener();
+  usePresenceListener();
 
-    channel
-      ?.listen(".message.received", (e: any) => {
-        if (e.content.sender_id === userId) return;
+  function navigate(target: string) {
+    if (target === sidebar) return;
 
-        let content: object = {};
-        if (e.content.room_type === "personal") {
-          if (e.content.type === "text") {
-            content = {
-              body: e.content.content,
-            };
-          } else if (e.content.type === "image") {
-            content = {
-              image: e.content.content,
-            } as any;
-          } else if (e.content.type === "file") {
-            content = {
-              body: "Mengirim sebuah file.",
-            };
-          }
-          showNotification(`Pesan dari ${e.content.sender_name}`, content);
-        } else if (e.content.room_type === "group") {
-          if (e.content.type === "text") {
-            content = {
-              body: `${e.content.sender_username}: ${e.content.content}`,
-            };
-          } else if (e.content.type === "image") {
-            content = {
-              body: `${e.content.sender_username} mengirim sebuah gambar.`,
-              image: e.content.content,
-            } as any;
-          } else if (e.content.type === "file") {
-            content = {
-              body: `${e.content.sender_username} mengirim sebuah file.`,
-            };
-          }
-          showNotification(e.content.room_name, content);
-        }
-      })
-      .error((err: any) => {
-        if (err.status === 403) {
-          roomState.setRoom({
-            targetElement: "chat-box",
-            roomType: null,
-            roomId: null,
-            roomName: null,
-            roomPicture: null,
-          });
-
-          toast({
-            variant: "destructive",
-            description: "Anda tidak memiliki akses.",
-          });
-        }
-      });
-
-    return () => {
-      channel?.stopListening(".message.received");
-      echo?.leave(userListen);
-    };
-  }
-
-  useEffect(() => {
-    let cleanupFn: (() => void) | undefined;
-    const credentials = localStorage.getItem("credentials") ?? null;
-    if (credentials) {
-      const decryptedData = decryptData(credentials);
-      if (decryptedData) {
-        userState.setUser({
-          id: decryptedData.user.id,
-          name: decryptedData.user.name,
-          username: decryptedData.user.username,
-          email: decryptedData.user.email,
-          avatar: decryptedData.user.avatar,
-          token: decryptedData.token,
-        });
-
-        cleanupFn = GlobalNotificationListener(decryptedData.user.id);
-      }
-    }
-
-    requestNotificationPermission();
-
-    return () => {
-      cleanupFn?.();
-    };
-  }, []);
-
-  const renderSidebar = () => {
-    switch (sidebarState.sidebar) {
-      case "chats":
-        return <Chats />;
-      case "profile":
-        return <Profile />;
-    }
-  };
-
-  const navigate = (target: string) => {
-    if (target === sidebarState.sidebar) return;
-
-    roomState.setRoom({
+    setRoom({
       targetElement: "chat-box",
       roomType: null,
       roomId: null,
       roomName: null,
       roomPicture: null,
+      userId: null,
+      isOnline: null,
     });
 
     switch (target) {
       case "chats":
-        sidebarState.setSidebar("chats");
+        setSidebar("chats");
         break;
       case "profile":
-        sidebarState.setSidebar("profile");
+        setSidebar("profile");
         break;
     }
-  };
+  }
+
+  function renderSidebar() {
+    switch (sidebar) {
+      case "chats":
+        return <Chats />;
+      case "profile":
+        return <Profile />;
+    }
+  }
 
   return (
     <>
@@ -147,7 +57,7 @@ export default function Main() {
       <section className="flex flex-row h-full overflow-hidden bg-indigo-100">
         {/* Menu */}
         <nav className="flex flex-col items-center justify-between h-full p-4 text-indigo-700 gap-y-4 shrink-0">
-          <button type="button" className={`p-2 rounded-full appearance-none ${sidebarState.sidebar === "chats" && "bg-indigo-200"}`} title="Chats" onClick={() => navigate("chats")}>
+          <button type="button" className={`p-2 rounded-full appearance-none ${sidebar === "chats" && "bg-indigo-200"}`} title="Chats" onClick={() => navigate("chats")}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
               <path
                 fillRule="evenodd"
@@ -157,7 +67,7 @@ export default function Main() {
             </svg>
           </button>
 
-          <button type="button" className={`p-2 rounded-full appearance-none ${sidebarState.sidebar === "profile" && "bg-indigo-200"}`} title="Profile" onClick={() => navigate("profile")}>
+          <button type="button" className={`p-2 rounded-full appearance-none ${sidebar === "profile" && "bg-indigo-200"}`} title="Profile" onClick={() => navigate("profile")}>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
               <path
                 fillRule="evenodd"

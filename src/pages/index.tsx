@@ -12,12 +12,64 @@ const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => 
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
 
 export default function IndexPage() {
-  const state = usePageStore();
+  const { page, setPage } = usePageStore();
   const timeOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { currentUser } = useAuth();
 
-  const renderPage = () => {
-    switch (state.page) {
+  useEffect(() => {
+    handleCheckCredentials();
+  }, []);
+
+  async function handleCheckCredentials() {
+    const credentials = localStorage.getItem("credentials") ?? null;
+    if (credentials) {
+      const decryptedData = decryptData(credentials);
+      if (decryptedData) {
+        try {
+          const resUser = await currentUser(decryptedData?.token);
+          if (resUser?.status === 200) {
+            navigate("main");
+          }
+        } catch (_err: any) {
+          localStorage.removeItem("credentials");
+          navigate("login");
+        }
+      } else {
+        localStorage.removeItem("credentials");
+        navigate("login");
+      }
+    } else {
+      navigate("login");
+    }
+  }
+
+  function navigate(target: string) {
+    if (target === page) return;
+
+    if (timeOutRef.current) {
+      clearTimeout(timeOutRef.current);
+    }
+
+    setPage("main-loader");
+
+    timeOutRef.current = setTimeout(() => {
+      switch (target) {
+        case "login":
+          setPage("login");
+          break;
+        case "main":
+          setPage("main");
+          break;
+        default:
+          setPage("not-found");
+          break;
+      }
+      timeOutRef.current = null;
+    }, 1000);
+  }
+
+  function renderPage() {
+    switch (page) {
       case "login":
         return <Login />;
       case "main":
@@ -27,56 +79,7 @@ export default function IndexPage() {
       case "not-found":
         return <NotFound />;
     }
-  };
-
-  useEffect(() => {
-    const credentials = localStorage.getItem("credentials");
-    if (credentials) {
-      handleCheckCredentials(credentials);
-    } else {
-      // redirect to login page
-      navigate("login");
-    }
-  }, []);
-
-  async function handleCheckCredentials(credentials: string) {
-    // verify credentials then redirect to chat page when verified
-    const decryptedData = decryptData(credentials);
-    try {
-      const resUser = await currentUser(decryptedData?.token);
-      if (resUser?.status === 200) {
-        navigate("main");
-      }
-    } catch (err) {
-      console.log(err);
-      // delete credentials then redirect to login page when not valid
-      localStorage.removeItem("credentials");
-      navigate("login");
-    }
   }
-
-  const navigate = (target: string) => {
-    if (target === state.page) return;
-    if (timeOutRef.current) {
-      clearTimeout(timeOutRef.current);
-    }
-    state.setPage("main-loader");
-
-    timeOutRef.current = setTimeout(() => {
-      switch (target) {
-        case "login":
-          state.setPage("login");
-          break;
-        case "main":
-          state.setPage("main");
-          break;
-        default:
-          state.setPage("not-found");
-          break;
-      }
-      timeOutRef.current = null;
-    }, 1000);
-  };
 
   useEffect(() => {
     return () => {

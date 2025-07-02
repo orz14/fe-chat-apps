@@ -13,11 +13,11 @@ export default function Login() {
       window.location.href = endpoint;
     } catch (err: any) {
       // await writeLogClient("error", err);
-      setLoading(false);
       toast({
         variant: "destructive",
         description: err.message,
       });
+      setLoading(false);
     }
   }
 
