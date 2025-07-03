@@ -50,6 +50,8 @@ export default function ChatRoom() {
       const roomName = `room.${room.roomId}`;
       channel = echo?.private(roomName);
 
+      if (!channel) return;
+
       channel
         ?.listen(".message.sent", (e: any) => {
           if (!e?.content) return;
@@ -83,7 +85,7 @@ export default function ChatRoom() {
     }
 
     return () => {
-      channel.stopListening(".message.sent");
+      channel?.stopListening(".message.sent");
       echo?.leave(`room.${room?.roomId}`);
     };
   }, [room?.roomId]);

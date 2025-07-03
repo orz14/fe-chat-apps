@@ -13,6 +13,8 @@ export function useNotificationListener() {
       const userListen = `user.${user.id}`;
       const channel = echo?.private(userListen);
 
+      if (!channel) return;
+
       channel
         ?.listen(".message.received", (e: any) => {
           if (!e?.content) return;
