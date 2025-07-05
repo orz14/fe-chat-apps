@@ -63,12 +63,16 @@ export default function Chats() {
     }
   }
 
+  function handleAddNewChat() {
+    alert("Coming Soon ...");
+  }
+
   return (
     <>
       <div className="flex flex-row items-center justify-between py-2 gap-x-4">
         <h1 className="text-xl font-bold pointer-events-none select-none">Chats</h1>
 
-        <button type="button" className="p-1.5 rounded-full hover:bg-indigo-300 transition-colors duration-300 ease-in-out" title="New chat">
+        <button type="button" onClick={handleAddNewChat} className="appearance-none p-1.5 rounded-full hover:bg-indigo-300 transition-colors duration-300 ease-in-out" title="New chat">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-5">
             <path
               strokeLinecap="round"

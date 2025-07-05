@@ -14,7 +14,7 @@ import { monotonicFactory } from "ulid";
 
 export default function ChatRoom() {
   const { toast } = useToast();
-  const { room, setRoom } = useRoomStore();
+  const { room, setRoom, reselected, resetReselected } = useRoomStore();
   const { user } = useUserDataStore();
   const { loadingRoom, setLoadingRoom } = useLoadingRoomStore();
   const { loadChats, sendText } = useChat();
@@ -30,6 +30,13 @@ export default function ChatRoom() {
   useEffect(() => {
     inputTextRef.current?.focus();
   }, [room]);
+
+  useEffect(() => {
+    if (reselected) {
+      inputTextRef.current?.focus();
+      resetReselected();
+    }
+  }, [reselected]);
 
   // Load chats & listen room
   useEffect(() => {
@@ -158,7 +165,7 @@ export default function ChatRoom() {
 
           if (messagesElement) {
             const distanceFromBottom = getDistanceFromBottom(messagesElement);
-            const lastMessageHeightAfter = (getLastMessageHeight() || 60) + 20;
+            const lastMessageHeightAfter = (getLastMessageHeight() || 60) + 24;
 
             if (distanceFromBottom === 0 || distanceFromBottom <= lastMessageHeightBefore + lastMessageHeightAfter) {
               scrollToBottom("smooth");
@@ -245,7 +252,7 @@ export default function ChatRoom() {
   const messagesElement = containerRef.current;
   if (messagesElement) {
     messagesElement.addEventListener("scroll", function () {
-      const lastMessageHeight = (getLastMessageHeight() || 60) + 16;
+      const lastMessageHeight = (getLastMessageHeight() || 60) + 20;
       const distanceFromBottom = getDistanceFromBottom(messagesElement);
 
       if (distanceFromBottom <= lastMessageHeight) {
@@ -254,6 +261,10 @@ export default function ChatRoom() {
         backToTopRef.current?.classList.add("!scale-100");
       }
     });
+  }
+
+  function handleAddAttachment() {
+    alert("Coming Soon ...");
   }
 
   return (
@@ -286,7 +297,7 @@ export default function ChatRoom() {
           </div>
         </div>
 
-        <div ref={containerRef} className="flex flex-col w-full h-full pt-4 px-4 space-y-1 overflow-x-hidden overflow-y-auto">
+        <div ref={containerRef} className="flex flex-col w-full h-full pt-4 px-4 space-y-2 overflow-x-hidden overflow-y-auto">
           <EachUtils
             of={messages}
             render={(message: any, index: number) => {
@@ -386,7 +397,7 @@ export default function ChatRoom() {
             </div>
           </button>
 
-          <button type="button" className="text-white appearance-none">
+          <button type="button" onClick={handleAddAttachment} className="text-white appearance-none">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-5">
               <path
                 fillRule="evenodd"
