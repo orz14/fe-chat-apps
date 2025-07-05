@@ -62,21 +62,23 @@ export default function Profile() {
     try {
       const res = await update(isEditing!, value);
       if (res?.status === 200) {
-        // update user data state
-        if (isEditing === "name") {
-          setUser({ ...user, name: value });
-        } else if (isEditing === "username") {
-          setUser({ ...user, username: value.toLowerCase().replace(/\s+/g, "-") });
-        }
+        setUser({
+          id: user.id,
+          name: res.data.user.name,
+          username: res.data.user.username,
+          email: user.email,
+          avatar: res.data.user.avatar,
+          token: user.token,
+        });
 
         const encryptedData = encryptData({
           token: user.token,
           user: {
             id: user.id,
-            name: isEditing === "name" ? value : user.name,
-            username: isEditing === "username" ? value.toLowerCase().replace(/\s+/g, "-") : user.username,
+            name: res.data.user.name,
+            username: res.data.user.username,
             email: user.email,
-            avatar: user.avatar,
+            avatar: res.data.user.avatar,
           },
         });
 
@@ -108,11 +110,17 @@ export default function Profile() {
       <div className="w-full flex justify-center items-center">
         <div className="relative size-40 bg-indigo-100 rounded-full">
           {user.avatar && user.avatar?.length > 0 ? (
-            <Image src={user.avatar} alt={user.name!} width={160} height={160} className="size-full object-cover rounded-full pointer-events-none" />
+            <Image src={user.avatar} alt={user.name!} width={200} height={200} className="size-full object-cover bg-indigo-100 rounded-full pointer-events-none" />
           ) : user.name && user.name?.length > 0 ? (
-            <Image src={`https://ui-avatars.com/api/?size=160&name=${user.name!.replaceAll(" ", "+")}`} alt={user.name!} width={160} height={160} className="size-full object-cover rounded-full pointer-events-none" />
+            <Image
+              src={`https://ui-avatars.com/api/?background=e0e7ff&color=000&size=200&name=${user.name.replaceAll(" ", "+")}&format=svg`}
+              alt={user.name!}
+              width={200}
+              height={200}
+              className="size-full object-cover bg-indigo-100 rounded-full pointer-events-none"
+            />
           ) : (
-            <div className="size-full flex justify-center items-center rounded-full pointer-events-none">
+            <div className="size-full flex justify-center items-center bg-indigo-100 text-indigo-900 rounded-full pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-10">
                 <path
                   fillRule="evenodd"
