@@ -49,7 +49,7 @@ export default function AuthorizationCallbackPage() {
       }
     } catch (err: any) {
       // await writeLogClient("error", err);
-      if (err.status === 401) {
+      if (err?.status === 401 || err?.response?.status === 401) {
         toast({
           variant: "destructive",
           description: "Login failed.",

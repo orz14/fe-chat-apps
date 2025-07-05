@@ -16,10 +16,12 @@ function useAuth() {
       }
     );
 
+  const update = (type: string, value: any) => axiosFetch("patch", `${baseURL}/update`, { type, value });
   const logout = (token?: string) => axiosLogout(`${baseURL}/logout`, token);
 
   return {
     currentUser,
+    update,
     logout,
   };
 }
