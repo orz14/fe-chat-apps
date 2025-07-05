@@ -11,6 +11,9 @@ export function usePresenceListener() {
   let presenceTimeout: NodeJS.Timeout | null = null;
 
   useEffect(() => {
+    const credentials = localStorage.getItem("credentials") ?? null;
+    if (!credentials) return;
+
     const presenceListen = "presence-user";
     const presence = echo?.join(presenceListen);
 

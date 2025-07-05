@@ -265,7 +265,7 @@ export default function ChatRoom() {
           ) : room?.roomType === "personal" ? (
             <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(room?.roomName || "User")}`} alt={room?.roomName || "User Avatar"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
           ) : (
-            <div className="size-10 flex justify-center items-center bg-[#ddd] text-indigo-900 rounded-full pointer-events-none">
+            <div className="size-10 flex justify-center items-center bg-indigo-100 text-indigo-900 rounded-full pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-7">
                 <path
                   fillRule="evenodd"

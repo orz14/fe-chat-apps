@@ -2,7 +2,7 @@ import useAxiosInterceptors from "@/lib/axios";
 // import useLogout from "./useLogout";
 // import { deleteCookie, getCookie, setCookie } from "cookies-next";
 // import { writeLogClient } from "@/lib/logClient";
-// import { decryptData } from "@/lib/crypto";
+import { decryptData } from "@/lib/crypto";
 import axios from "axios";
 
 export default function useAxios() {
@@ -50,86 +50,70 @@ export default function useAxios() {
     }
   }
 
-  // async function axiosLogout(endpoint: string, token?: string) {
-  //   async function getCsrfToken(method: any) {
-  //     const baseURL = process.env.NEXT_PUBLIC_API_URL ?? "https://be-chat.orzverse.com/api";
+  async function axiosLogout(endpoint: string, token?: string) {
+    // async function getCsrfToken(method: any) {
+    //   const baseURL = process.env.NEXT_PUBLIC_API_URL ?? "https://be-chat.orzverse.com/api";
 
-  //     if (method && ["post", "put", "patch", "delete"].includes(method)) {
-  //       try {
-  //         const resServer = await methodSwitch("custom", "get", `${baseURL}/check-connection`);
-  //         if (resServer?.status === 200) {
-  //           setCookie("CSRF-TOKEN", resServer?.data.csrf_token || "", {
-  //             path: "/",
-  //             maxAge: 60 * 60 * 24,
-  //             secure: true,
-  //             sameSite: "strict",
-  //           });
-  //         }
-  //       } catch (err) {
-  //         if (err?.status === 401) {
-  //           deleteCookie("token", { path: "/" });
-  //           deleteCookie("user-ip", { path: "/" });
-  //           localStorage.removeItem("encryptedData");
-  //           window.location.href = `${window.location.origin}/auth/login`;
-  //         } else {
-  //           await writeLogClient("error", err);
-  //           window.location.reload();
-  //         }
-  //       }
-  //     }
-  //   }
+    //   if (method && ["post", "put", "patch", "delete"].includes(method)) {
+    //     try {
+    //       const resServer = await methodSwitch("custom", "get", `${baseURL}/check-connection`);
+    //       if (resServer?.status === 200) {
+    //         setCookie("CSRF-TOKEN", resServer?.data.csrf_token || "", {
+    //           path: "/",
+    //           maxAge: 60 * 60 * 24,
+    //           secure: true,
+    //           sameSite: "strict",
+    //         });
+    //       }
+    //     } catch (err) {
+    //       if (err?.status === 401) {
+    //         deleteCookie("token", { path: "/" });
+    //         deleteCookie("user-ip", { path: "/" });
+    //         localStorage.removeItem("encryptedData");
+    //         window.location.href = `${window.location.origin}/auth/login`;
+    //       } else {
+    //         await writeLogClient("error", err);
+    //         window.location.reload();
+    //       }
+    //     }
+    //   }
+    // }
 
-  //   // X-CSRF-TOKEN
-  //   const csrfToken = (await getCookie("CSRF-TOKEN")) ?? "";
+    // X-CSRF-TOKEN
+    // const csrfToken = (await getCookie("CSRF-TOKEN")) ?? "";
 
-  //   // User-IP
-  //   let userIp: string = "";
-  //   const getUserIp = (await getCookie("user-ip")) ?? null;
-  //   if (getUserIp) {
-  //     const parsedUserIp = getUserIp.replace(/=/g, "");
-  //     userIp = parsedUserIp;
-  //   }
+    // Authorization
+    let bearerToken: string = "";
+    if (token) {
+      bearerToken = `Bearer ${token}`;
+    } else {
+      const encryptedData = localStorage.getItem("credentials") ?? null;
+      if (encryptedData) {
+        const decryptedData = decryptData(encryptedData);
+        if (decryptedData) {
+          bearerToken = `Bearer ${decryptedData.token}`;
+        }
+      }
+    }
 
-  //   // Fingerprint_
-  //   const fingerprint = (await getCookie("fingerprint_")) ?? "";
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        // "X-CSRF-TOKEN": csrfToken,
+        Authorization: bearerToken,
+      },
+    };
 
-  //   // Authorization
-  //   let bearerToken: string = "";
-  //   if (token) {
-  //     bearerToken = `Bearer ${token}`;
-  //   } else {
-  //     const cookieToken = (await getCookie("token")) ?? null;
-  //     if (cookieToken) {
-  //       bearerToken = `Bearer ${cookieToken}`;
-  //     } else {
-  //       const encryptedData = localStorage.getItem("encryptedData") ?? null;
-  //       if (encryptedData) {
-  //         const decryptedData = decryptData(encryptedData);
-  //         bearerToken = `Bearer ${decryptedData.token}`;
-  //       }
-  //     }
-  //   }
+    try {
+      return await methodSwitch("basic", "delete", endpoint, {}, config);
+    } catch (err) {
+      // const method = err?.config?.method;
+      // await getCsrfToken(method);
 
-  //   const config = {
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Accept: "application/json",
-  //       "X-CSRF-TOKEN": csrfToken,
-  //       "User-IP": userIp,
-  //       Fingerprint_: fingerprint,
-  //       Authorization: bearerToken,
-  //     },
-  //   };
+      throw err;
+    }
+  }
 
-  //   try {
-  //     return await methodSwitch("basic", "delete", endpoint, {}, config);
-  //   } catch (err) {
-  //     const method = err?.config?.method;
-  //     await getCsrfToken(method);
-
-  //     throw err;
-  //   }
-  // }
-
-  return { axiosBasic, axiosRaw, axiosFetch };
+  return { axiosBasic, axiosRaw, axiosFetch, axiosLogout };
 }
