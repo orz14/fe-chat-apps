@@ -9,9 +9,14 @@ export function useNotificationListener() {
   const { user } = useUserDataStore();
 
   useEffect(() => {
+    const credentials = localStorage.getItem("credentials") ?? null;
+    if (!credentials) return;
+
     if (!!user?.id && "Notification" in window && Notification.permission === "granted") {
       const userListen = `user.${user.id}`;
       const channel = echo?.private(userListen);
+
+      if (!channel) return;
 
       channel
         ?.listen(".message.received", (e: any) => {

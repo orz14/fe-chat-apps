@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type PageType = "login" | "main" | "main-loader" | "not-found";
+type PageType = "login" | "main" | "logout" | "main-loader" | "not-found";
 
 type PageState = {
   page: PageType;

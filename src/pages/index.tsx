@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 
 const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => <MainLoader /> });
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
+const Logout = dynamic(() => import("@/components/Logout"), { loading: () => <MainLoader /> });
 
 export default function IndexPage() {
   const { page, setPage } = usePageStore();
@@ -74,6 +75,8 @@ export default function IndexPage() {
         return <Login />;
       case "main":
         return <Main />;
+      case "logout":
+        return <Logout />;
       case "main-loader":
         return <MainLoader />;
       case "not-found":

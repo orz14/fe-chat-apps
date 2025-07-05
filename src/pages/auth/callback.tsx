@@ -1,9 +1,9 @@
+import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import MetaTag from "@/components/MetaTag";
 import useAuth from "@/configs/api/auth";
 import { useToast } from "@/hooks/use-toast";
 import { encryptData } from "@/lib/crypto";
 import { comfortaa } from "@/lib/fonts";
-import { Loader2 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
@@ -70,9 +70,9 @@ export default function AuthorizationCallbackPage() {
       <MetaTag title={"Authorization"} />
 
       <main className={`${comfortaa.className} w-full h-svh flex items-center justify-center lg:p-5`}>
-        <div className="w-full h-full overflow-hidden lg:rounded-2xl bg-red-500">
-          <section className="h-full flex justify-center items-center overflow-hidden bg-indigo-100">
-            <Loader2 className="animate-spin w-4 h-4 mr-2 -mt-1" />
+        <div className="w-full h-full overflow-hidden lg:rounded-2xl bg-indigo-100">
+          <section className="h-full flex flex-row justify-center items-center gap-x-2">
+            <SpinnerLoader width="w-5 -mt-1" />
             <span className="font-bold">Authorization</span>
           </section>
         </div>

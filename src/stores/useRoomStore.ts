@@ -14,7 +14,10 @@ type RoomType = {
 
 type RoomState = {
   room: RoomType;
+  reselected: boolean;
   setRoom: (room: RoomType | ((prevRooms: RoomType) => RoomType)) => void;
+  markReselected: () => void;
+  resetReselected: () => void;
 };
 
 export const useRoomStore = create<RoomState>((set) => ({
@@ -27,9 +30,12 @@ export const useRoomStore = create<RoomState>((set) => ({
     userId: null,
     isOnline: null,
   },
+  reselected: false,
   // setRoom: (room: RoomType) => set({ room: room }),
   setRoom: (updater) =>
     set((state) => ({
       room: typeof updater === "function" ? updater(state.room) : updater,
     })),
+  markReselected: () => set({ reselected: true }),
+  resetReselected: () => set({ reselected: false }),
 }));

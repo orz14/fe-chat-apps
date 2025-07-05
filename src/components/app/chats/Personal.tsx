@@ -38,7 +38,10 @@ export default function PersonalChats() {
   }
 
   function handleRoomState(room: any) {
-    if (roomState?.room?.roomId === room.room_id) return;
+    if (roomState?.room?.roomId === room.room_id) {
+      roomState.markReselected();
+      return;
+    }
     roomState.setRoom({
       targetElement: "chat-room",
       roomType: room.room_type,

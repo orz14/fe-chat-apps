@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/api/**",
       },
+      // temporary
+      {
+        protocol: "https",
+        hostname: "i.pinimg.com",
+        port: "",
+        pathname: "/**",
+      },
     ],
   },
 };
