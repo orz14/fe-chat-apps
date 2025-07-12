@@ -44,11 +44,11 @@ export default function Profile() {
     // alert("Coming Soon ...");
 
     setIsEditing(target);
-    if (target === "name") {
-      setValue(user.name!);
-    } else if (target === "username") {
-      setValue(user.username!);
-    }
+    const valueMap: Record<string, string | undefined> = {
+      name: user.name!,
+      username: user.username!,
+    };
+    setValue(valueMap[target] ?? "");
 
     requestAnimationFrame(() => {
       setTimeout(() => {
@@ -58,27 +58,35 @@ export default function Profile() {
   }
 
   async function handleUpdateProfileInformation() {
+    const valueBefore = isEditing === "name" ? user.name! : isEditing === "username" ? user.username! : "";
+
+    if (valueBefore === value) {
+      setIsEditing(null);
+      setValue("");
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await update(isEditing!, value);
       if (res?.status === 200) {
-        setUser({
-          id: user.id,
+        const updatedUser = {
+          ...user,
           name: res.data.user.name,
           username: res.data.user.username,
-          email: user.email,
           avatar: res.data.user.avatar,
-          token: user.token,
-        });
+        };
+
+        setUser(updatedUser);
 
         const encryptedData = encryptData({
-          token: user.token,
+          token: updatedUser.token,
           user: {
-            id: user.id,
-            name: res.data.user.name,
-            username: res.data.user.username,
-            email: user.email,
-            avatar: res.data.user.avatar,
+            id: updatedUser.id,
+            name: updatedUser.name,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            avatar: updatedUser.avatar,
           },
         });
 
