@@ -6,12 +6,14 @@ import { useUserDataStore } from "@/stores/useUserDataStore";
 import Image from "next/image";
 import { useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
+import useProfile from "@/configs/api/profile";
 
 export default function Profile() {
   const { toast } = useToast();
   const { user, setUser } = useUserDataStore();
   const { logoutAuth } = useLogout();
-  const { update, logout } = useAuth();
+  const { logout } = useAuth();
+  const { updateProfileInformation } = useProfile();
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [value, setValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -68,7 +70,7 @@ export default function Profile() {
 
     setLoading(true);
     try {
-      const res = await update(isEditing!, value);
+      const res = await updateProfileInformation(isEditing!, value);
       if (res?.status === 200) {
         const updatedUser = {
           ...user,

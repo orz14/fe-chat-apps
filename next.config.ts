@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     remotePatterns: [
       {
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
+        pathname: "/api/files/**",
+      },
+      {
         protocol: "https",
         hostname: "cdn.jsdelivr.net",
         port: "",
