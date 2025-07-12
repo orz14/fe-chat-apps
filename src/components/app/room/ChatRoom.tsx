@@ -334,7 +334,7 @@ export default function ChatRoom() {
                       <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
                         {room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
                         <div className="block p-2">
-                          <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg`} />
+                          <img src={message.content} alt={`image-${message.id}`} className={`block w-auto h-full max-h-96 object-cover rounded-lg`} />
                         </div>
                         {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
                       </div>
