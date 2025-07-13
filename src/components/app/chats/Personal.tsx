@@ -69,7 +69,7 @@ export default function PersonalChats() {
           <div className="w-full max-w-[260px] flex flex-row items-center gap-x-2">
             <div className="relative">
               {room.room_picture?.length > 0 ? (
-                <Image src={room.room_picture} alt={room.room_name} width={100} height={100} className="size-8 object-cover bg-indigo-200 rounded-full pointer-events-none" />
+                <Image src={room.room_picture} alt={room.room_name} width={100} height={100} className="size-8 object-cover bg-indigo-200 rounded-full pointer-events-none" unoptimized />
               ) : (
                 <Image
                   src={`https://ui-avatars.com/api/?background=c7d2fe&color=000&size=100&name=${room.room_name.replaceAll(" ", "+")}&format=svg`}

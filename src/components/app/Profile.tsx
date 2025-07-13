@@ -13,11 +13,12 @@ export default function Profile() {
   const { user, setUser } = useUserDataStore();
   const { logoutAuth } = useLogout();
   const { logout } = useAuth();
-  const { updateProfileInformation } = useProfile();
+  const { updateProfileInformation, updateProfileAvatar } = useProfile();
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [value, setValue] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputFileRef = useRef<HTMLInputElement | null>(null);
 
   async function handleLogout() {
     setIsEditing(null);
@@ -57,6 +58,13 @@ export default function Profile() {
         inputRef.current?.focus();
       }, 20);
     });
+  }
+
+  function handleEditProfileAvatar() {
+    if (inputFileRef.current) {
+      inputFileRef.current.value = "";
+    }
+    inputFileRef.current?.click();
   }
 
   async function handleUpdateProfileInformation() {
@@ -111,6 +119,63 @@ export default function Profile() {
     }
   }
 
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setIsEditing("avatar");
+    const files = e.target.files;
+    if (!files || files.length === 0) {
+      e.target.value = "";
+      return;
+    }
+
+    const file = files[0];
+    const formData = new FormData();
+    formData.append("_method", "patch");
+    formData.append("type", "avatar");
+    formData.append("value", file);
+
+    setLoading(true);
+    try {
+      const res = await updateProfileAvatar(formData);
+      if (res?.status === 200) {
+        const updatedUser = {
+          ...user,
+          name: res.data.user.name,
+          username: res.data.user.username,
+          avatar: res.data.user.avatar,
+        };
+
+        setUser(updatedUser);
+
+        const encryptedData = encryptData({
+          token: updatedUser.token,
+          user: {
+            id: updatedUser.id,
+            name: updatedUser.name,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            avatar: updatedUser.avatar,
+          },
+        });
+
+        if (encryptedData) {
+          localStorage.setItem("credentials", encryptedData);
+        }
+      }
+    } catch (err: any) {
+      if (err?.status !== 401) {
+        toast({
+          variant: "destructive",
+          description: err.message,
+        });
+        // await writeLogClient("error", err);
+      }
+    } finally {
+      setIsEditing(null);
+      setValue("");
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="py-2">
@@ -120,7 +185,7 @@ export default function Profile() {
       <div className="w-full flex justify-center items-center">
         <div className="relative size-40 bg-indigo-100 rounded-full">
           {user.avatar && user.avatar?.length > 0 ? (
-            <Image src={user.avatar} alt={user.name!} width={200} height={200} className="size-full object-cover bg-indigo-100 rounded-full pointer-events-none" />
+            <Image src={user.avatar} alt={user.name!} width={200} height={200} className="size-full object-cover bg-indigo-100 rounded-full pointer-events-none" unoptimized />
           ) : user.name && user.name?.length > 0 ? (
             <Image
               src={`https://ui-avatars.com/api/?background=e0e7ff&color=000&size=200&name=${user.name.replaceAll(" ", "+")}&format=svg`}
@@ -141,17 +206,31 @@ export default function Profile() {
             </div>
           )}
           {user.name && user.name?.length > 0 && (
-            <button
-              type="button"
-              onClick={() => alert("Coming Soon ...")}
-              className="appearance-none absolute bottom-1 right-1 size-10 bg-white hover:bg-gray-200 border-4 border-indigo-200 rounded-full cursor-pointer transition-colors duration-300 ease-in-out"
-            >
-              <div className="size-full flex justify-center items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
-                </svg>
-              </div>
-            </button>
+            <>
+              <input type="file" hidden ref={inputFileRef} accept="image/*" onChange={handleAvatarChange} />
+
+              {isEditing === "avatar" && loading && (
+                <div className="absolute top-0 left-0 size-full flex justify-center items-center text-white bg-black rounded-full opacity-50 z-10">
+                  <Loader2 className="animate-spin size-6" />
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleEditProfileAvatar}
+                className="appearance-none absolute bottom-1 right-1 size-10 bg-white hover:bg-gray-200 border-4 border-indigo-200 rounded-full cursor-pointer z-20 transition-colors duration-300 ease-in-out"
+              >
+                <div className="size-full flex justify-center items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-4">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+                    />
+                  </svg>
+                </div>
+              </button>
+            </>
           )}
         </div>
       </div>

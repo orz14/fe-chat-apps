@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "be-chat.orzverse.com",
+        port: "",
+        pathname: "/api/files/**",
+      },
+      {
+        protocol: "https",
         hostname: "cdn.jsdelivr.net",
         port: "",
         pathname: "**",
@@ -32,6 +38,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "https",
         hostname: "i.pinimg.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.pexels.com",
         port: "",
         pathname: "/**",
       },

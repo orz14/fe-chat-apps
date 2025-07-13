@@ -17,10 +17,17 @@ function useProfile() {
     );
 
   const updateProfileInformation = (type: string, value: any) => axiosFetch("patch", `${baseURL}/update`, { type, value });
+  const updateProfileAvatar = (formData: any) =>
+    axiosFetch("post", `${baseURL}/update`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
 
   return {
     currentUser,
     updateProfileInformation,
+    updateProfileAvatar,
   };
 }
 
