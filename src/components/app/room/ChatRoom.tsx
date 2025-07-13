@@ -272,11 +272,17 @@ export default function ChatRoom() {
       <div className="flex flex-col justify-between h-full">
         <div className="flex flex-row items-center p-4 font-bold text-white bg-indigo-400 gap-x-2 select-none">
           {(room?.roomPicture?.length ?? 0) > 0 ? (
-            <Image src={room.roomPicture!} alt={room?.roomName || "Room picture"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
+            <Image src={room.roomPicture!} alt={room?.roomName || "Room picture"} width={100} height={100} className="size-10 object-cover bg-indigo-200 rounded-full pointer-events-none" unoptimized />
           ) : room?.roomType === "personal" ? (
-            <Image src={`https://ui-avatars.com/api/?name=${encodeURIComponent(room?.roomName || "User")}`} alt={room?.roomName || "User Avatar"} width={50} height={50} className="object-cover rounded-full size-10 pointer-events-none" />
+            <Image
+              src={`https://ui-avatars.com/api/?background=c7d2fe&color=000&size=100&name=${encodeURIComponent(room?.roomName || "User")}&format=svg`}
+              alt={room?.roomName || "User Avatar"}
+              width={100}
+              height={100}
+              className="size-10 object-cover bg-indigo-200 rounded-full pointer-events-none"
+            />
           ) : (
-            <div className="size-10 flex justify-center items-center bg-indigo-100 text-indigo-900 rounded-full pointer-events-none">
+            <div className="size-10 flex justify-center items-center bg-indigo-200 text-indigo-900 rounded-full pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-7">
                 <path
                   fillRule="evenodd"
@@ -328,7 +334,7 @@ export default function ChatRoom() {
                       <div className={`min-w-[140px] max-w-[50%] ${chatClass}`}>
                         {room?.roomType === "group" && <div className={`${dataClass} rounded-br-xl`}>{message.sender_username}</div>}
                         <div className="block p-2">
-                          <img src={message.content} alt={`image-${message.id}`} className={`block rounded-lg`} />
+                          <Image src={message.content} alt={`image-${message.id}`} width={1000} height={1000} className="block w-auto h-full max-h-96 object-cover rounded-lg" unoptimized />
                         </div>
                         {showTimestamp && <div className={`${dataClass} rounded-tl-xl ml-auto`}>{currentTime}</div>}
                       </div>

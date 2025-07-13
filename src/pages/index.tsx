@@ -3,10 +3,10 @@ import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import MainLoader from "@/components/loaders/MainLoader";
 import NotFound from "@/components/NotFound";
-import useAuth from "@/configs/api/auth";
 import { decryptData } from "@/lib/crypto";
 import { usePageStore } from "@/stores/usePageStore";
 import { Toaster } from "@/components/ui/toaster";
+import useProfile from "@/configs/api/profile";
 
 const Login = dynamic(() => import("@/components/auth/Login"), { loading: () => <MainLoader /> });
 const Main = dynamic(() => import("@/components/app/Main"), { loading: () => <MainLoader /> });
@@ -15,7 +15,7 @@ const Logout = dynamic(() => import("@/components/Logout"), { loading: () => <Ma
 export default function IndexPage() {
   const { page, setPage } = usePageStore();
   const timeOutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { currentUser } = useAuth();
+  const { currentUser } = useProfile();
 
   useEffect(() => {
     handleCheckCredentials();

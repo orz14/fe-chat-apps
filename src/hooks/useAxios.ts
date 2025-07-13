@@ -1,13 +1,13 @@
 import useAxiosInterceptors from "@/lib/axios";
-// import useLogout from "./useLogout";
 // import { deleteCookie, getCookie, setCookie } from "cookies-next";
 // import { writeLogClient } from "@/lib/logClient";
 import { decryptData } from "@/lib/crypto";
 import axios from "axios";
+import useLogout from "./useLogout";
 
 export default function useAxios() {
   const axiosInstance = useAxiosInterceptors();
-  // const { logoutAuth } = useLogout();
+  const { logoutAuth } = useLogout();
 
   async function methodSwitch(type: "basic" | "custom", method: "get" | "post" | "patch" | "delete", endpoint: string, data: any = {}, config: any = {}) {
     const client = type === "basic" ? axios : axiosInstance;
@@ -43,9 +43,9 @@ export default function useAxios() {
     try {
       return await methodSwitch("custom", method, endpoint, data, config);
     } catch (err) {
-      // if (err?.status === 401 || err?.response?.status === 401) {
-      //   return await logoutAuth(logout);
-      // }
+      if (err?.status === 401 || err?.response?.status === 401) {
+        return await logoutAuth(logout);
+      }
       throw err;
     }
   }
@@ -66,7 +66,7 @@ export default function useAxios() {
     //         });
     //       }
     //     } catch (err) {
-    //       if (err?.status === 401) {
+    //       if (err?.status === 401 || err?.response?.status === 401) {
     //         deleteCookie("token", { path: "/" });
     //         deleteCookie("user-ip", { path: "/" });
     //         localStorage.removeItem("encryptedData");

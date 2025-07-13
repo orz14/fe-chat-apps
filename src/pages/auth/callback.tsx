@@ -1,6 +1,6 @@
 import SpinnerLoader from "@/components/loaders/SpinnerLoader";
 import MetaTag from "@/components/MetaTag";
-import useAuth from "@/configs/api/auth";
+import useProfile from "@/configs/api/profile";
 import { useToast } from "@/hooks/use-toast";
 import { encryptData } from "@/lib/crypto";
 import { comfortaa } from "@/lib/fonts";
@@ -10,7 +10,7 @@ import { useEffect } from "react";
 export default function AuthorizationCallbackPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { currentUser } = useAuth();
+  const { currentUser } = useProfile();
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -49,7 +49,7 @@ export default function AuthorizationCallbackPage() {
       }
     } catch (err: any) {
       // await writeLogClient("error", err);
-      if (err.status === 401) {
+      if (err?.status === 401 || err?.response?.status === 401) {
         toast({
           variant: "destructive",
           description: "Login failed.",

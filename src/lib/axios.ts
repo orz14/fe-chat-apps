@@ -29,7 +29,7 @@ if (typeof window !== "undefined") {
   //         });
   //       }
   //     } catch (err) {
-  //       if (err.status === 401) {
+  //       if (err?.status === 401 || err?.response?.status === 401) {
   //         deleteCookie("token", { path: "/" });
   //         deleteCookie("user-ip", { path: "/" });
   //         localStorage.removeItem("encryptedData");
